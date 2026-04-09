@@ -31,7 +31,7 @@
     }
 
     .wrap{
-      max-width:1480px;
+      max-width:1560px;
       margin:0 auto;
       padding:20px;
     }
@@ -79,7 +79,7 @@
 
     .metrics{
       display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
+      grid-template-columns:repeat(6,minmax(0,1fr));
       gap:14px;
       margin-bottom:18px;
     }
@@ -131,6 +131,12 @@
     .grid-2{
       display:grid;
       grid-template-columns:1.05fr .95fr;
+      gap:18px;
+    }
+
+    .grid-3{
+      display:grid;
+      grid-template-columns:380px 1fr 340px;
       gap:18px;
     }
 
@@ -225,6 +231,10 @@
 
     button.danger{
       background:#7f1d1d;
+    }
+
+    button.good{
+      background:#065f46;
     }
 
     .preview-shell{
@@ -384,16 +394,129 @@
       background:#0b1220;
     }
 
+    .scene-canvas-wrap{
+      border:1px solid var(--line);
+      background:#0b1220;
+      border-radius:18px;
+      padding:12px;
+    }
+
+    .scene-canvas{
+      position:relative;
+      width:100%;
+      aspect-ratio:16/9;
+      background:#fff;
+      border-radius:12px;
+      overflow:hidden;
+      border:1px solid #cbd5e1;
+    }
+
+    .scene-layer{
+      position:absolute;
+      overflow:hidden;
+      cursor:pointer;
+      border:1px dashed transparent;
+    }
+
+    .scene-layer.selected{
+      border-color:#2563eb;
+      box-shadow:0 0 0 2px rgba(37,99,235,.25) inset;
+    }
+
+    .scene-layer img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
+      pointer-events:none;
+    }
+
+    .scene-layer.text-layer,
+    .scene-layer.guide-layer{
+      display:flex;
+      align-items:flex-start;
+      justify-content:flex-start;
+      padding:4px 6px;
+      white-space:pre-wrap;
+      font-weight:700;
+      pointer-events:none;
+    }
+
+    .layer-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      max-height:520px;
+      overflow:auto;
+    }
+
+    .layer-item{
+      border:1px solid var(--line);
+      background:#0b1220;
+      border-radius:12px;
+      padding:10px;
+      cursor:pointer;
+    }
+
+    .layer-item.active{
+      border-color:#2563eb;
+      background:#111b33;
+    }
+
+    .layer-item .top{
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      margin-bottom:6px;
+      font-size:13px;
+    }
+
+    .layer-type{
+      color:#93c5fd;
+    }
+
+    .scene-card{
+      border:1px solid var(--line);
+      background:#0b1220;
+      border-radius:16px;
+      padding:12px;
+    }
+
+    .scene-card h4{
+      margin:0 0 8px 0;
+    }
+
+    .scene-card .meta{
+      color:var(--muted);
+      font-size:12px;
+      margin-bottom:8px;
+    }
+
+    .inline-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
+    @media (max-width:1300px){
+      .grid-3{grid-template-columns:1fr}
+    }
+
     @media (max-width:1100px){
       .grid-2{grid-template-columns:1fr}
       .preview-shell{grid-template-columns:1fr}
       .searchbar{grid-template-columns:1fr 1fr}
-      .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
     }
 
     @media (max-width:700px){
       .row{grid-template-columns:1fr}
       .searchbar{grid-template-columns:1fr}
+      .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+
+    @media (max-width:520px){
       .metrics{grid-template-columns:1fr}
     }
   </style>
@@ -403,7 +526,7 @@
     <div class="topbar">
       <div>
         <h1>Ebeveyn Denetim ve Gelişim Paneli</h1>
-        <div class="sub">Manuel asset odaklı sade panel</div>
+        <div class="sub">Manuel asset ve katmanlı sahne editörü</div>
       </div>
       <div class="badge">
         <span class="dot"></span>
@@ -428,12 +551,21 @@
         <div class="k">Aktif Asset</div>
         <div class="v" id="statActive">0</div>
       </div>
+      <div class="metric">
+        <div class="k">Toplam Sahne</div>
+        <div class="v" id="statSceneCount">0</div>
+      </div>
+      <div class="metric">
+        <div class="k">Toplam Katman</div>
+        <div class="v" id="statLayerCount">0</div>
+      </div>
     </div>
 
     <div class="tabs">
       <button class="tab-btn active" data-tab="controlTab">Canlı Kontrol</button>
       <button class="tab-btn" data-tab="contentTab">İçerik</button>
       <button class="tab-btn" data-tab="assetTab">Asset Stüdyosu</button>
+      <button class="tab-btn" data-tab="sceneTab">Sahne Editörü</button>
       <button class="tab-btn" data-tab="piTab">Pi</button>
     </div>
 
@@ -546,7 +678,7 @@
       <div class="grid-2">
         <div class="panel">
           <h2>Manuel Asset Oluştur</h2>
-          <div class="section-note">Open Images ve çeviri kaldırıldı. Dosya yerelden seçilir, önizleme tarayıcıda gösterilir, kayıt JSON olarak yapılır.</div>
+          <div class="section-note">Yerelden görsel seç, önizle, asset olarak kaydet.</div>
 
           <div class="preview-shell">
             <div>
@@ -590,6 +722,7 @@
               <div class="actions">
                 <button onclick="createManualAsset()">Asset Kaydet</button>
                 <button class="alt" onclick="resetAssetForm()">Formu Temizle</button>
+                <button class="alt" id="saveEditedBtn" onclick="saveEditedAsset()">Seçili Asseti Güncelle</button>
               </div>
 
               <div id="assetCreateMessage" class="msg"></div>
@@ -618,6 +751,169 @@
         </div>
 
         <div id="assetsGrid" class="cards"></div>
+      </div>
+    </section>
+
+    <section id="sceneTab" class="tab-panel">
+      <div class="grid-3">
+        <div class="panel">
+          <h2>Sahne Tanımı</h2>
+          <div class="section-note">Arka, orta, ön, yazı ve rehber katmanlarını tek sahnede birleştir.</div>
+
+          <div class="field">
+            <label>Sahne Adı</label>
+            <input id="sceneName" type="text" placeholder="örn: Top sahada">
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Hedef Kelime</label>
+              <input id="sceneTargetWord" type="text" placeholder="örn: top">
+            </div>
+            <div class="field">
+              <label>Söyleniş</label>
+              <input id="scenePronunciation" type="text" placeholder="örn: to-p">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Notlar</label>
+            <textarea id="sceneNotes" placeholder="örn: arka plan saha, ortada çocuk, önde top"></textarea>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Canvas Genişlik</label>
+              <input id="sceneCanvasW" type="number" value="1280">
+            </div>
+            <div class="field">
+              <label>Canvas Yükseklik</label>
+              <input id="sceneCanvasH" type="number" value="720">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Arka Plan Rengi</label>
+            <input id="sceneCanvasBg" type="text" value="#ffffff" placeholder="#ffffff">
+          </div>
+
+          <div class="actions">
+            <button class="good" onclick="saveScene()">Sahneyi Kaydet</button>
+            <button class="alt" onclick="sendSceneToPi()">Pi'ye Gönder</button>
+            <button class="alt" onclick="resetSceneEditor()">Formu Temizle</button>
+          </div>
+
+          <div id="sceneMessage" class="msg"></div>
+
+          <hr style="border-color:var(--line); margin:18px 0;">
+
+          <h3>Katman Ekle</h3>
+
+          <div class="field">
+            <label>Katman Türü</label>
+            <select id="layerType">
+              <option value="background">Arka Plan</option>
+              <option value="image">Görsel</option>
+              <option value="avatar">Rehber Karakter</option>
+              <option value="decor">Dekor</option>
+              <option value="text">Yazı</option>
+              <option value="guide">Söyleniş / Hece</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Katman Adı</label>
+            <input id="layerName" type="text" placeholder="örn: ön top">
+          </div>
+
+          <div class="field">
+            <label>Asset Seç</label>
+            <select id="layerAssetSelect">
+              <option value="">Asset seç</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Yazı İçeriği</label>
+            <input id="layerText" type="text" placeholder="örn: TOP">
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>X</label>
+              <input id="layerX" type="number" value="0">
+            </div>
+            <div class="field">
+              <label>Y</label>
+              <input id="layerY" type="number" value="0">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Genişlik</label>
+              <input id="layerW" type="number" value="200">
+            </div>
+            <div class="field">
+              <label>Yükseklik</label>
+              <input id="layerH" type="number" value="200">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Z Sırası</label>
+              <input id="layerZ" type="number" value="0">
+            </div>
+            <div class="field">
+              <label>Opacity</label>
+              <input id="layerOpacity" type="number" value="1" step="0.1" min="0" max="1">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Yazı Boyutu</label>
+              <input id="layerFontSize" type="number" value="42">
+            </div>
+            <div class="field">
+              <label>Yazı Rengi</label>
+              <input id="layerColor" type="text" value="#111111">
+            </div>
+          </div>
+
+          <div class="check">
+            <input id="layerVisible" type="checkbox" checked>
+            <label for="layerVisible" style="margin:0;">Görünür</label>
+          </div>
+
+          <div class="actions">
+            <button onclick="addLayerToScene()">Katman Ekle</button>
+            <button class="alt" onclick="updateSelectedLayer()">Seçili Katmanı Güncelle</button>
+            <button class="danger" onclick="removeSelectedLayer()">Seçili Katmanı Sil</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Canlı Sahne Önizleme</h2>
+          <div class="scene-canvas-wrap">
+            <div id="sceneCanvas" class="scene-canvas"></div>
+          </div>
+          <div class="small" style="margin-top:10px;">
+            Not: Şimdilik sürükle-bırak yok. X / Y / W / H / Z değerleri ile katman yerleşimi yapılıyor.
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Katmanlar</h2>
+          <div id="layerList" class="layer-list"></div>
+
+          <h3 style="margin-top:18px;">Kaydedilmiş Sahneler</h3>
+          <div class="actions">
+            <button class="alt" onclick="loadScenes()">Sahneleri Yenile</button>
+          </div>
+          <div id="sceneList" class="list" style="margin-top:12px;"></div>
+        </div>
       </div>
     </section>
 
@@ -675,6 +971,11 @@
   <script>
     let selectedImageBase64 = "";
     let selectedImageMime = "image/png";
+    let allAssetsCache = [];
+    let sceneLayers = [];
+    let selectedLayerId = "";
+    let editingSceneId = "";
+    let editingAssetId = "";
 
     function el(id){ return document.getElementById(id); }
 
@@ -710,11 +1011,30 @@
     }
 
     async function api(url, options = {}){
+      const headers = {};
+      if (!(options.body instanceof FormData)) {
+        headers["Content-Type"] = "application/json";
+      }
+
       const res = await fetch(url, {
-        headers: { "Content-Type": "application/json" },
+        headers,
         ...options
       });
       return res.json();
+    }
+
+    function findAssetById(assetId){
+      return allAssetsCache.find(x => x.asset_id === assetId) || null;
+    }
+
+    function getAssetImage(assetId){
+      const asset = findAssetById(assetId);
+      return asset ? (asset.image_path || asset.thumb_path || "") : "";
+    }
+
+    function nextLayerZ(){
+      if (!sceneLayers.length) return 0;
+      return Math.max(...sceneLayers.map(x => Number(x.z || 0))) + 10;
     }
 
     document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -762,6 +1082,7 @@
       el("thumbPreview").src = "";
       el("thumbPlaceholder").style.display = "block";
       setMsg("assetCreateMessage", "");
+      editingAssetId = "";
     }
 
     async function createManualAsset(){
@@ -803,10 +1124,7 @@
 
       setMsg("assetCreateMessage", "Asset kaydedildi", true);
       resetAssetForm();
-      await loadAssets();
-      await loadAssetStats();
-      await loadAssetHistory();
-      await loadServerStatus();
+      await refreshAssetArea();
     }
 
     async function loadAssets(){
@@ -817,6 +1135,9 @@
 
       const data = await api(`/assets/list?q=${q}&label=${label}&tag=${tag}&interest=${interest}&status=active`);
       const items = data.assets || [];
+      allAssetsCache = items;
+      populateAssetSelect(items);
+
       const root = el("assetsGrid");
 
       if (!items.length){
@@ -828,7 +1149,7 @@
         const tags = (item.tags_tr || []).map(x => `<span class="chip">${esc(x)}</span>`).join("");
         const interests = (item.interests_tr || []).map(x => `<span class="chip">${esc(x)}</span>`).join("");
         const pref = item.preferred ? `<span class="chip">preferred</span>` : "";
-        const image = esc(item.image_path || "");
+        const image = esc(item.image_path || item.thumb_path || "");
         const labelTr = esc(item.label_tr || item.label || "");
         const notes = esc(item.notes || "");
         const id = esc(item.asset_id || "");
@@ -850,6 +1171,17 @@
           </div>
         `;
       }).join("");
+    }
+
+    function populateAssetSelect(items){
+      const sel = el("layerAssetSelect");
+      const current = sel.value;
+      sel.innerHTML = `<option value="">Asset seç</option>` + items.map(item => {
+        const label = esc(item.label_tr || item.label || item.asset_id || "");
+        const id = esc(item.asset_id || "");
+        return `<option value="${id}">${label}</option>`;
+      }).join("");
+      sel.value = current;
     }
 
     async function loadAssetStats(){
@@ -888,11 +1220,11 @@
       }
 
       setMsg("assetCreateMessage", `Düzenlemek için asset seçildi: ${assetId}`, true);
-      window.__editingAssetId = assetId;
+      editingAssetId = assetId;
     }
 
     async function saveEditedAsset(){
-      if (!window.__editingAssetId){
+      if (!editingAssetId){
         setMsg("assetCreateMessage", "Önce düzenlenecek asset seç", false);
         return;
       }
@@ -905,7 +1237,7 @@
         preferred: el("assetPreferred").checked
       };
 
-      const data = await api(`/assets/update?asset_id=${encodeURIComponent(window.__editingAssetId)}`, {
+      const data = await api(`/assets/update?asset_id=${encodeURIComponent(editingAssetId)}`, {
         method: "POST",
         body: JSON.stringify(payload)
       });
@@ -916,10 +1248,419 @@
       }
 
       setMsg("assetCreateMessage", "Asset güncellendi", true);
-      await loadAssets();
-      await loadAssetStats();
-      await loadAssetHistory();
-      window.__editingAssetId = "";
+      editingAssetId = "";
+      await refreshAssetArea();
+    }
+
+    function buildScenePayloadFromEditor(){
+      return {
+        scene_id: editingSceneId || undefined,
+        name: el("sceneName").value.trim(),
+        target_word: el("sceneTargetWord").value.trim(),
+        pronunciation: el("scenePronunciation").value.trim(),
+        notes: el("sceneNotes").value.trim(),
+        canvas: {
+          width: Number(el("sceneCanvasW").value || 1280),
+          height: Number(el("sceneCanvasH").value || 720),
+          background: el("sceneCanvasBg").value.trim() || "#ffffff",
+        },
+        layers: sceneLayers.slice().sort((a, b) => Number(a.z || 0) - Number(b.z || 0))
+      };
+    }
+
+    function resetSceneEditor(){
+      editingSceneId = "";
+      selectedLayerId = "";
+      sceneLayers = [];
+      el("sceneName").value = "";
+      el("sceneTargetWord").value = "";
+      el("scenePronunciation").value = "";
+      el("sceneNotes").value = "";
+      el("sceneCanvasW").value = "1280";
+      el("sceneCanvasH").value = "720";
+      el("sceneCanvasBg").value = "#ffffff";
+      resetLayerForm();
+      renderSceneCanvas();
+      renderLayerList();
+      setMsg("sceneMessage", "");
+    }
+
+    function resetLayerForm(){
+      el("layerType").value = "background";
+      el("layerName").value = "";
+      el("layerAssetSelect").value = "";
+      el("layerText").value = "";
+      el("layerX").value = "0";
+      el("layerY").value = "0";
+      el("layerW").value = "200";
+      el("layerH").value = "200";
+      el("layerZ").value = String(nextLayerZ());
+      el("layerOpacity").value = "1";
+      el("layerFontSize").value = "42";
+      el("layerColor").value = "#111111";
+      el("layerVisible").checked = true;
+      selectedLayerId = "";
+    }
+
+    function addLayerToScene(){
+      const type = el("layerType").value;
+      const assetId = el("layerAssetSelect").value;
+      const text = el("layerText").value.trim();
+      const name = el("layerName").value.trim() || `Katman ${sceneLayers.length + 1}`;
+
+      if (["background","image","avatar","decor"].includes(type) && !assetId){
+        setMsg("sceneMessage", "Bu katman türü için asset seçmelisin", false);
+        return;
+      }
+
+      if (["text","guide"].includes(type) && !text){
+        setMsg("sceneMessage", "Metin katmanı için yazı gerekli", false);
+        return;
+      }
+
+      const layer = {
+        layer_id: `layer_${Math.random().toString(36).slice(2, 10)}`,
+        name,
+        type,
+        x: Number(el("layerX").value || 0),
+        y: Number(el("layerY").value || 0),
+        w: Number(el("layerW").value || 200),
+        h: Number(el("layerH").value || 200),
+        z: Number(el("layerZ").value || nextLayerZ()),
+        opacity: Number(el("layerOpacity").value || 1),
+        visible: !!el("layerVisible").checked
+      };
+
+      if (["background","image","avatar","decor"].includes(type)){
+        layer.asset_id = assetId;
+        layer.src = getAssetImage(assetId);
+        layer.fit = "contain";
+      }
+
+      if (type === "text" || type === "guide"){
+        layer.text = text;
+        layer.font_size = Number(el("layerFontSize").value || 42);
+        layer.color = el("layerColor").value.trim() || "#111111";
+        layer.font_weight = type === "guide" ? "600" : "700";
+        layer.align = "left";
+      }
+
+      sceneLayers.push(layer);
+      sceneLayers.sort((a,b) => Number(a.z || 0) - Number(b.z || 0));
+      renderSceneCanvas();
+      renderLayerList();
+      resetLayerForm();
+      setMsg("sceneMessage", "Katman eklendi", true);
+    }
+
+    function selectLayer(layerId){
+      selectedLayerId = layerId;
+      const layer = sceneLayers.find(x => x.layer_id === layerId);
+      if (!layer) return;
+
+      el("layerType").value = layer.type || "image";
+      el("layerName").value = layer.name || "";
+      el("layerAssetSelect").value = layer.asset_id || "";
+      el("layerText").value = layer.text || "";
+      el("layerX").value = String(layer.x ?? 0);
+      el("layerY").value = String(layer.y ?? 0);
+      el("layerW").value = String(layer.w ?? 200);
+      el("layerH").value = String(layer.h ?? 200);
+      el("layerZ").value = String(layer.z ?? 0);
+      el("layerOpacity").value = String(layer.opacity ?? 1);
+      el("layerFontSize").value = String(layer.font_size ?? 42);
+      el("layerColor").value = layer.color || "#111111";
+      el("layerVisible").checked = !!layer.visible;
+
+      renderSceneCanvas();
+      renderLayerList();
+    }
+
+    function updateSelectedLayer(){
+      if (!selectedLayerId){
+        setMsg("sceneMessage", "Önce katman seç", false);
+        return;
+      }
+
+      const idx = sceneLayers.findIndex(x => x.layer_id === selectedLayerId);
+      if (idx < 0){
+        setMsg("sceneMessage", "Katman bulunamadı", false);
+        return;
+      }
+
+      const type = el("layerType").value;
+      const assetId = el("layerAssetSelect").value;
+      const text = el("layerText").value.trim();
+
+      const layer = {
+        ...sceneLayers[idx],
+        name: el("layerName").value.trim() || sceneLayers[idx].name,
+        type,
+        x: Number(el("layerX").value || 0),
+        y: Number(el("layerY").value || 0),
+        w: Number(el("layerW").value || 200),
+        h: Number(el("layerH").value || 200),
+        z: Number(el("layerZ").value || 0),
+        opacity: Number(el("layerOpacity").value || 1),
+        visible: !!el("layerVisible").checked
+      };
+
+      if (["background","image","avatar","decor"].includes(type)){
+        if (!assetId){
+          setMsg("sceneMessage", "Bu katman türü için asset seçmelisin", false);
+          return;
+        }
+        layer.asset_id = assetId;
+        layer.src = getAssetImage(assetId);
+      } else {
+        delete layer.asset_id;
+        delete layer.src;
+      }
+
+      if (type === "text" || type === "guide"){
+        if (!text){
+          setMsg("sceneMessage", "Metin katmanı için yazı gerekli", false);
+          return;
+        }
+        layer.text = text;
+        layer.font_size = Number(el("layerFontSize").value || 42);
+        layer.color = el("layerColor").value.trim() || "#111111";
+        layer.font_weight = type === "guide" ? "600" : "700";
+      } else {
+        delete layer.text;
+        delete layer.font_size;
+        delete layer.color;
+      }
+
+      sceneLayers[idx] = layer;
+      sceneLayers.sort((a,b) => Number(a.z || 0) - Number(b.z || 0));
+      renderSceneCanvas();
+      renderLayerList();
+      setMsg("sceneMessage", "Katman güncellendi", true);
+    }
+
+    function removeSelectedLayer(){
+      if (!selectedLayerId){
+        setMsg("sceneMessage", "Önce katman seç", false);
+        return;
+      }
+
+      sceneLayers = sceneLayers.filter(x => x.layer_id !== selectedLayerId);
+      selectedLayerId = "";
+      resetLayerForm();
+      renderSceneCanvas();
+      renderLayerList();
+      setMsg("sceneMessage", "Katman silindi", true);
+    }
+
+    function renderSceneCanvas(){
+      const root = el("sceneCanvas");
+      const w = Number(el("sceneCanvasW").value || 1280);
+      const h = Number(el("sceneCanvasH").value || 720);
+      const bg = el("sceneCanvasBg").value.trim() || "#ffffff";
+
+      root.style.background = bg;
+      root.innerHTML = "";
+
+      const layers = sceneLayers.slice().sort((a,b) => Number(a.z || 0) - Number(b.z || 0));
+
+      layers.forEach(layer => {
+        if (!layer.visible) return;
+
+        const node = document.createElement("div");
+        node.className = "scene-layer";
+        if (layer.layer_id === selectedLayerId) node.classList.add("selected");
+        if (layer.type === "text") node.classList.add("text-layer");
+        if (layer.type === "guide") node.classList.add("guide-layer");
+
+        node.style.left = ((Number(layer.x || 0) / w) * 100) + "%";
+        node.style.top = ((Number(layer.y || 0) / h) * 100) + "%";
+        node.style.width = ((Number(layer.w || 0) / w) * 100) + "%";
+        node.style.height = ((Number(layer.h || 0) / h) * 100) + "%";
+        node.style.zIndex = String(layer.z || 0);
+        node.style.opacity = String(layer.opacity ?? 1);
+
+        if (layer.type === "text" || layer.type === "guide"){
+          node.textContent = layer.text || "";
+          node.style.color = layer.color || "#111111";
+          node.style.fontSize = Math.max(12, Number(layer.font_size || 42) * 0.45) + "px";
+          node.style.fontWeight = layer.font_weight || "700";
+          node.style.pointerEvents = "auto";
+        } else {
+          const img = document.createElement("img");
+          img.src = layer.src || getAssetImage(layer.asset_id || "");
+          img.alt = layer.name || layer.type || "";
+          img.style.objectFit = layer.type === "background" ? "cover" : "contain";
+          node.appendChild(img);
+          node.style.pointerEvents = "auto";
+        }
+
+        node.onclick = () => selectLayer(layer.layer_id);
+        root.appendChild(node);
+      });
+    }
+
+    function renderLayerList(){
+      const root = el("layerList");
+      if (!sceneLayers.length){
+        root.innerHTML = `<div class="small">Henüz katman yok</div>`;
+        return;
+      }
+
+      const layers = sceneLayers.slice().sort((a,b) => Number(a.z || 0) - Number(b.z || 0));
+      root.innerHTML = layers.map(layer => `
+        <div class="layer-item ${layer.layer_id === selectedLayerId ? "active" : ""}" onclick="selectLayer('${esc(layer.layer_id)}')">
+          <div class="top">
+            <strong>${esc(layer.name || "Katman")}</strong>
+            <span class="layer-type">${esc(layer.type || "")}</span>
+          </div>
+          <div class="small">z=${esc(layer.z)} • x=${esc(layer.x)} • y=${esc(layer.y)} • ${esc(layer.w)}x${esc(layer.h)}</div>
+          <div class="small">${layer.type === "text" || layer.type === "guide" ? esc(layer.text || "") : esc(layer.asset_id || "")}</div>
+        </div>
+      `).join("");
+    }
+
+    async function saveScene(){
+      const payload = buildScenePayloadFromEditor();
+
+      if (!payload.name){
+        setMsg("sceneMessage", "Sahne adı gerekli", false);
+        return;
+      }
+
+      if (!payload.layers.length){
+        setMsg("sceneMessage", "En az 1 katman olmalı", false);
+        return;
+      }
+
+      let data;
+      if (editingSceneId){
+        data = await api(`/scenes/update?scene_id=${encodeURIComponent(editingSceneId)}`, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+      } else {
+        data = await api("/scenes/create", {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+      }
+
+      if (!data.ok){
+        setMsg("sceneMessage", data.error || "Sahne kaydedilemedi", false);
+        return;
+      }
+
+      editingSceneId = data.scene?.scene_id || editingSceneId;
+      setMsg("sceneMessage", "Sahne kaydedildi", true);
+      await loadScenes();
+      await loadSceneStats();
+    }
+
+    async function sendSceneToPi(){
+      const payload = buildScenePayloadFromEditor();
+
+      if (!payload.layers.length){
+        setMsg("sceneMessage", "Gönderilecek katman yok", false);
+        return;
+      }
+
+      const data = await api("/screen/layered_scene", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+
+      setMsg("sceneMessage", data.ok === false ? (data.error || "Gönderilemedi") : "Sahne Pi'ye gönderildi", data.ok !== false);
+      await refreshQueue();
+    }
+
+    async function loadScenes(){
+      const data = await api("/scenes/list?status=active");
+      const items = data.items || [];
+      const root = el("sceneList");
+
+      if (!items.length){
+        root.innerHTML = `<div class="small">Henüz sahne yok</div>`;
+        return;
+      }
+
+      root.innerHTML = items.map(item => `
+        <div class="scene-card">
+          <h4>${esc(item.name || "")}</h4>
+          <div class="meta">${esc(item.scene_id || "")}</div>
+          <div class="small">Hedef: ${esc(item.target_word || "")} • Katman: ${(item.layers || []).length}</div>
+          <div class="small" style="margin-top:6px;">${esc(item.pronunciation || "")}</div>
+          <div class="inline-actions">
+            <button class="alt" onclick="openScene('${esc(item.scene_id || "")}')">Yükle</button>
+            <button class="alt" onclick="sendStoredSceneToPi('${esc(item.scene_id || "")}')">Gönder</button>
+            <button class="danger" onclick="deleteScene('${esc(item.scene_id || "")}')">Sil</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function openScene(sceneId){
+      const item = await api(`/scenes/get?scene_id=${encodeURIComponent(sceneId)}`);
+      if (item.error){
+        setMsg("sceneMessage", item.error, false);
+        return;
+      }
+
+      editingSceneId = item.scene_id || "";
+      el("sceneName").value = item.name || "";
+      el("sceneTargetWord").value = item.target_word || "";
+      el("scenePronunciation").value = item.pronunciation || "";
+      el("sceneNotes").value = item.notes || "";
+      el("sceneCanvasW").value = item.canvas?.width || 1280;
+      el("sceneCanvasH").value = item.canvas?.height || 720;
+      el("sceneCanvasBg").value = item.canvas?.background || "#ffffff";
+      sceneLayers = Array.isArray(item.layers) ? item.layers.slice() : [];
+      selectedLayerId = "";
+      renderSceneCanvas();
+      renderLayerList();
+      document.querySelector('[data-tab="sceneTab"]').click();
+      setMsg("sceneMessage", "Sahne yüklendi", true);
+    }
+
+    async function deleteScene(sceneId){
+      const data = await api(`/scenes/delete?scene_id=${encodeURIComponent(sceneId)}`, {
+        method: "POST"
+      });
+
+      if (!data.ok){
+        setMsg("sceneMessage", data.error || "Sahne silinemedi", false);
+        return;
+      }
+
+      if (editingSceneId === sceneId){
+        resetSceneEditor();
+      }
+
+      setMsg("sceneMessage", "Sahne silindi", true);
+      await loadScenes();
+      await loadSceneStats();
+    }
+
+    async function sendStoredSceneToPi(sceneId){
+      const item = await api(`/scenes/get?scene_id=${encodeURIComponent(sceneId)}`);
+      if (item.error){
+        setMsg("sceneMessage", item.error, false);
+        return;
+      }
+
+      const data = await api("/screen/layered_scene", {
+        method: "POST",
+        body: JSON.stringify(item)
+      });
+
+      setMsg("sceneMessage", data.ok === false ? (data.error || "Gönderilemedi") : "Kayıtlı sahne Pi'ye gönderildi", data.ok !== false);
+      await refreshQueue();
+    }
+
+    async function loadSceneStats(){
+      const data = await api("/scenes/stats");
+      el("statSceneCount").textContent = data.total_scenes ?? 0;
+      el("statLayerCount").textContent = data.total_layers ?? 0;
     }
 
     async function sendSpeechCards(){
@@ -1126,25 +1867,25 @@
       el("autonomyStateBox").textContent = pretty(data);
     }
 
-    async function init(){
-      const assetActions = document.querySelector("#assetTab .actions");
-      if (assetActions && !document.getElementById("saveEditedBtn")){
-        const btn = document.createElement("button");
-        btn.id = "saveEditedBtn";
-        btn.className = "alt";
-        btn.textContent = "Seçili Asseti Güncelle";
-        btn.onclick = saveEditedAsset;
-        assetActions.appendChild(btn);
-      }
-
-      await loadServerStatus();
+    async function refreshAssetArea(){
+      await loadAssets();
       await loadAssetStats();
       await loadAssetHistory();
-      await loadAssets();
+      await loadSceneStats();
+      await loadServerStatus();
+    }
+
+    async function init(){
+      await loadServerStatus();
+      await refreshAssetArea();
       await refreshQueue();
       await loadDrafts();
       await loadAutonomyState();
+      await loadScenes();
       buildPayloadPreview();
+      resetLayerForm();
+      renderSceneCanvas();
+      renderLayerList();
     }
 
     init();
