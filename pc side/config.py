@@ -1,4 +1,4 @@
-API_KEY = "AIzaSyAuZcr1Tr1XJ2lAamQJ8s3d4FSctBPVtTw"
+API_KEY = "api key"
 
 LM_STUDIO_URL = "http://127.0.0.1:1234/v1/chat/completions"
 MODEL = "qwen3.5-9b-abliterated"
