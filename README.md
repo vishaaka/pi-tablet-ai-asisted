@@ -1,0 +1,312 @@
+# Pi Tablet AI Assisted
+
+> **ANA ÜRÜN TANIMI (DEĞİŞMEZ):**
+>
+> Bu proje öncelikle **çocuk için eğitici, eğlenceli, AI destekli yaşayan tablet uygulamasıdır.**
+>
+> Projenin merkezi hedefi:
+>
+> * çocuk dostu ana menü
+> * YouTube Kids tabanlı güvenli video akışı
+> * AI önerili mini oyunlar
+> * eşya tanıma / nesne bulma
+> * gördüğü şey hakkında konuşmaya teşvik
+> * kamera ile gerçek dünyadan nesne buldurma
+> * AI arkadaş ile konuşma
+>
+> **ÖNEMLİ KURAL:**
+> Parent panel, layered scene editor, asset studio ve diğer tüm PC-side araçlar yalnızca bu ana ürün deneyimini BESLEYEN arka plan geliştirme araçlarıdır.
+>
+> Proje hiçbir aşamada yalnızca terapi materyali editörüne dönüşmeyecek.
+>
+> Geliştirilen tüm fonksiyonlar:
+>
+> * asset sistemi
+> * layered scene sistemi
+> * parent dashboard
+> * orchestration
+> * preload
+> * analytics
+>
+> şu an korunacaktır; ancak ileride optimizasyon aşamasında ana çocuk tablet deneyimine hizmet etmeyen parçalar çıkarılabilir, sadeleştirilebilir veya tamamen değiştirilebilir.
+>
+> **ANA HEDEF HER ZAMAN:**
+>
+> > yaşayan AI çocuk tableti + eğitici eğlence + konuşma teşviki
+
+## Misyon
+
+Pi Tablet AI Assisted projesinin temel amacı, **konuşma gecikmesi yaşayan çocuklar için AI destekli, ebeveyn denetimli, terapi odaklı bir etkileşim sistemi** geliştirmektir.
+
+Sistem özellikle:
+
+* konuşmayı teşvik etme
+* dikkat süresini artırma
+* hedef kelime tekrarını doğal oyunlaştırma ile sunma
+* ilgi alanına göre içerik uyarlama
+* ebeveynin sürekli başında olmadan terapi akışını sürdürebilme
+* gerektiğinde ebeveynin canlı müdahale edebilmesi
+
+hedefleri üzerine kuruludur.
+
+Bu proje klasik kart gösterim sisteminden farklı olarak:
+
+> **AI destekli dinamik terapi sahneleri + ebeveyn kontrollü öğrenme orkestrasyonu**
+
+mantığında ilerler.
+
+---
+
+# Vizyon
+
+Uzun vadeli hedef, Raspberry Pi tabanlı çocuk dostu bir terapi cihazını aşağıdaki seviyeye taşımaktır:
+
+* konuşmaya teşvik eden rehber avatar
+* ağız hareketi animasyonları
+* kamera tabanlı dikkat analizi
+* ilgi alanı öğrenen asset sistemi
+* otomatik seans zorluk ayarı
+* ebeveyn dashboard üzerinden canlı kontrol
+* ana PC üzerinde güçlü AI inference
+* Pi tarafında hafif render ve cache
+
+Nihai vizyon:
+
+> **Ev tipi kişisel AI terapi arkadaşı**
+
+özellikle konuşma gecikmesi, dikkat zorlukları ve erken gelişim desteği için sürdürülebilir bir platform oluşturmak.
+
+---
+
+# Sistem Mimarisi
+
+## A) Ana PC
+
+Merkezi zeka burada çalışır.
+
+Görevler:
+
+* AI inference
+* session orchestration
+* asset learning
+* layered scene üretimi
+* parent dashboard
+* scene editor
+* payload queue yönetimi
+* milestone / progress tracking
+
+## B) Raspberry Pi 5
+
+Çocuk tarafındaki hafif istemci.
+
+Görevler:
+
+* ekran render
+* mikrofon
+* hoparlör
+* kamera bridge
+* preload edilmiş content pack oynatma
+* layered scene render
+* local cache
+
+## C) Parent Dashboard
+
+Ebeveyn ve terapist kontrol paneli.
+
+Özellikler:
+
+* canlı müdahale
+* manuel asset ekleme
+* thumbnail preview
+* layered scene editor
+* z-order layer yönetimi
+* Pi’ye canlı gönderim
+* draft ve payload preview
+* otonom seans başlat/durdur
+
+---
+
+# Proje İlkeleri
+
+## 1) Çocuk tarafı her zaman hafif kalacak
+
+Pi tarafında AI inference minimum tutulur.
+
+Pi’nin görevi:
+
+* hazır sahneyi göstermek
+* preload yapmak
+* hızlı tepki vermek
+
+## 2) Asıl zeka PC tarafında
+
+Ana karar sistemi:
+
+* asset seçimi
+* ilgi analizi
+* sahne oluşturma
+* rehber avatar yönetimi
+* session success scoring
+
+PC tarafında kalır.
+
+## 3) Ebeveyn her zaman müdahil olabilir
+
+Sistem tamamen otonom çalışsa bile:
+
+* canlı asset gönderme
+* sahne düzenleme
+* seans durdurma
+* yeni hedef belirleme
+
+her zaman panelden yapılabilir.
+
+---
+
+# Mevcut Final PC-Side Mimari
+
+## Temel backend omurgası
+
+### `pc side/asset_manager.py`
+
+Asset manifest yönetimi.
+
+Sorumluluklar:
+
+* manuel asset create/update
+* image_base64 kayıt
+* thumbnail path
+* label_tr / tags_tr / interests_tr
+* preferred
+* history
+* stats
+
+## `pc side/scene_manager.py`
+
+Katmanlı sahne sistemi.
+
+Sorumluluklar:
+
+* scene create/update/delete
+* layer normalization
+* z-order sıralama
+* layered scene payload üretimi
+* Pi contract
+
+## `pc side/parent_panel.py`
+
+API katmanı.
+
+Ana endpoint grupları:
+
+* `/assets/*`
+* `/scenes/*`
+* `/screen/layered_scene`
+* `/autonomy/*`
+* `/queue`
+* `/server/*`
+
+## `pc side/parent_panel_ui.html`
+
+Üretim hazır ebeveyn paneli.
+
+Özellikler:
+
+* asset studio
+* scene editor
+* drag & drop layer preview
+* öne getir / arkaya gönder
+* ortada kalsın
+* merkeze al
+* Pi gönder
+* kayıtlı sahneler
+
+---
+
+# Layered Scene Standard
+
+Pi’ye giden standart payload:
+
+```json
+{
+  "screen": "layered_speech_scene",
+  "scene_id": "scene_top_001",
+  "target_word": "top",
+  "pronunciation": "to-p",
+  "canvas": {
+    "width": 1280,
+    "height": 720,
+    "background": "#ffffff"
+  },
+  "layers": []
+}
+```
+
+Katman tipleri:
+
+* background
+* decor
+* image
+* avatar
+* text
+* guide
+
+---
+
+# Rehber Avatar Vizyonu
+
+Standart rehber karakter:
+
+* parlak kızıl dalgalı saç
+* yeşil göz
+* oval yüz
+* sıcak ifade
+* net ağız bölgesi
+* çocuk dostu stil
+
+İleriki sürüm:
+
+* phoneme based mouth animation
+* lip sync
+* 1e1 konuşma yönlendirme
+* dikkat düşüşünde jest/mimik destekleri
+
+---
+
+# Yakın Yol Haritası
+
+## Faz 1 — Pi Renderer
+
+* layered scene renderer
+* z-order çizim
+* avatar render
+* guide text render
+* preload next scene
+
+## Faz 2 — Adaptive Learning
+
+* camera attention feedback
+* asset preferred scoring
+* başarısız asset düşürme
+* ilgi alanı kaydırma
+* session success tracker
+
+## Faz 3 — Therapy Intelligence
+
+* konuşma analizi
+* kelime bazlı başarı skoru
+* ağız hareketi avatar
+* ebeveyn öneri motoru
+* otomatik günlük terapi planı
+
+---
+
+# Final Not
+
+Bu README proje hafızası olarak kullanılacaktır.
+
+Amaç:
+
+> yeni sohbetlerde tekrar tekrar özet çıkarmadan doğrudan geliştirmeye devam edebilmek
+
+Özellikle mimari kararlar, misyon, vizyon ve teknik kontratlar burada korunmalıdır.
