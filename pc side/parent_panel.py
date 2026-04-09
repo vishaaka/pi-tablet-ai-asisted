@@ -1,302 +1,335 @@
-# -*- coding: utf-8 -*-
-from __future__ import annotations
-
-import json
-import shutil
-import uuid
-from datetime import datetime
-from pathlib import Path
-from typing import Any
-
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from PIL import Image
 
-BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "data"
-ASSETS_DIR = BASE_DIR / "assets"
-LIBRARY_DIR = ASSETS_DIR / "library"
-THUMBS_DIR = LIBRARY_DIR / "thumbs"
-UI_FILE = BASE_DIR / "parent_panel_ui.html"
-MANIFEST_PATH = DATA_DIR / "asset_manifest.json"
+from command_queue import push_command, get_pending_commands
+from server_manager import (
+    start_server,
+    stop_server,
+    start_all,
+    stop_all,
+    stop_all_safe,
+    status_all,
+)
+from mode_manager import get_mode, set_mode
+from draft_manager import add_draft, get_all_drafts, get_draft, delete_draft
+from session_orchestrator import (
+    load_settings as autonomy_load_settings,
+    save_settings as autonomy_save_settings,
+    start_session as autonomy_start_session,
+    stop_session as autonomy_stop_session,
+    get_session_state as autonomy_get_session_state,
+    tick_session as autonomy_tick_session,
+)
+from asset_manager import (
+    create_asset,
+    list_assets,
+    get_asset,
+    update_asset,
+    asset_stats,
+)
+from asset_history import list_asset_history
 
-DATA_DIR.mkdir(parents=True, exist_ok=True)
-ASSETS_DIR.mkdir(parents=True, exist_ok=True)
-LIBRARY_DIR.mkdir(parents=True, exist_ok=True)
-THUMBS_DIR.mkdir(parents=True, exist_ok=True)
+import requests
+import os
 
-app = FastAPI(title="Pi Tablet Parent Panel", version="manual-assets-v1")
-app.mount("/assets", StaticFiles(directory=str(ASSETS_DIR)), name="assets")
+app = FastAPI(title="Parent Control Panel")
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+HTML_PATH = os.path.join(BASE_DIR, "parent_panel_ui.html")
+ASSETS_PATH = os.path.join(BASE_DIR, "assets")
+os.makedirs(ASSETS_PATH, exist_ok=True)
+
+app.mount("/assets", StaticFiles(directory=ASSETS_PATH), name="assets")
 
 
-def now_iso() -> str:
-    return datetime.now().isoformat(timespec="seconds")
-
-
-def load_manifest() -> list[dict[str, Any]]:
-    if not MANIFEST_PATH.exists():
-        return []
+def safe_get_json(url: str):
     try:
-        with open(MANIFEST_PATH, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        if isinstance(data, list):
-            return data
-        return []
-    except Exception:
-        return []
-
-
-def save_manifest(data: list[dict[str, Any]]) -> None:
-    with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
-
-def slugify(text: str) -> str:
-    text = (text or "").strip().lower()
-    repl = {
-        "ç": "c",
-        "ğ": "g",
-        "ı": "i",
-        "İ": "i",
-        "ö": "o",
-        "ş": "s",
-        "ü": "u",
-    }
-    for k, v in repl.items():
-        text = text.replace(k, v)
-
-    out = []
-    for ch in text:
-        if ch.isalnum():
-            out.append(ch)
-        elif ch in (" ", "-", "_"):
-            out.append("_")
-
-    result = "".join(out)
-    while "__" in result:
-        result = result.replace("__", "_")
-    return result.strip("_") or "asset"
-
-
-def parse_csv_text(value: str) -> list[str]:
-    if not value:
-        return []
-    return [x.strip() for x in value.split(",") if x.strip()]
-
-
-def build_asset_id(label: str) -> str:
-    return f"{slugify(label)}_{uuid.uuid4().hex[:6]}"
-
-
-def make_thumbnail(src_path: Path, thumb_path: Path, size: tuple[int, int] = (256, 256)) -> None:
-    with Image.open(src_path) as img:
-        img = img.convert("RGB")
-        img.thumbnail(size)
-        img.save(thumb_path, format="JPEG", quality=90)
+        r = requests.get(url, timeout=5)
+        return JSONResponse(content=r.json())
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=502)
 
 
 @app.get("/")
-async def root() -> FileResponse:
-    if not UI_FILE.exists():
-        raise HTTPException(status_code=404, detail="parent_panel_ui.html bulunamadı")
-    return FileResponse(str(UI_FILE))
+def root():
+    return {
+        "panel": "ok",
+        "open": "http://127.0.0.1:9100/panel",
+        "mode": get_mode(),
+    }
+
+
+@app.get("/panel", response_class=HTMLResponse)
+def panel():
+    if not os.path.exists(HTML_PATH):
+        return HTMLResponse(
+            "<h1>parent_panel_ui.html bulunamadı</h1>",
+            status_code=404,
+        )
+
+    with open(HTML_PATH, "r", encoding="utf-8") as f:
+        return HTMLResponse(f.read())
+
+
+@app.get("/mode")
+def current_mode():
+    return {"mode": get_mode()}
+
+
+@app.post("/mode/set")
+def change_mode(mode: str):
+    return set_mode(mode)
+
+
+@app.get("/queue")
+def queue_view():
+    return {"commands": get_pending_commands()}
+
+
+@app.post("/screen/speech_cards")
+def set_speech_cards(words: list[str]):
+    return push_command(
+        "set_screen",
+        {"screen": "speech_cards", "cards": words},
+    )
+
+
+@app.post("/screen/game")
+def set_game(payload: dict):
+    return push_command(
+        "set_screen",
+        {"screen": "interactive_game", **payload},
+    )
+
+
+@app.post("/session/shutdown_after")
+def shutdown_after(minutes: int):
+    return push_command("shutdown_after", {"minutes": minutes})
+
+
+@app.post("/session/shutdown_now")
+def shutdown_now():
+    return push_command("shutdown_now")
+
+
+@app.post("/widget/remove")
+def remove_widget(widget_id: str):
+    return push_command("remove_widget", {"widget_id": widget_id})
+
+
+@app.post("/content/append")
+def append_content(payload: dict):
+    return push_command("append_content", payload)
+
+
+@app.post("/server/start")
+def server_start(name: str):
+    return start_server(name)
+
+
+@app.post("/server/stop")
+def server_stop(name: str):
+    return stop_server(name)
+
+
+@app.post("/server/start_all")
+def server_start_all():
+    return start_all()
+
+
+@app.post("/server/stop_all")
+def server_stop_all():
+    return stop_all()
+
+
+@app.post("/server/stop_all_safe")
+def server_stop_all_safe():
+    return stop_all_safe()
 
 
 @app.get("/server/status")
-async def server_status() -> dict[str, Any]:
-    manifest = load_manifest()
-    return {
-        "ok": True,
-        "server": "running",
-        "asset_count": len(manifest),
-        "library_dir": str(LIBRARY_DIR),
-        "thumbs_dir": str(THUMBS_DIR),
-        "manifest_path": str(MANIFEST_PATH),
-        "time": now_iso(),
-    }
+def server_status():
+    data = status_all()
+    data["mode"] = get_mode()
+    data["manual_asset_mode"] = True
+    return data
 
 
-@app.get("/assets/list")
-async def assets_list() -> dict[str, Any]:
-    manifest = load_manifest()
-    manifest_sorted = sorted(
-        manifest,
-        key=lambda x: x.get("created_at", ""),
-        reverse=True
-    )
-    return {
-        "ok": True,
-        "count": len(manifest_sorted),
-        "items": manifest_sorted,
-    }
+# ---- Taslaklar ----
+
+@app.get("/drafts")
+def drafts_list():
+    return {"drafts": get_all_drafts()}
 
 
-@app.get("/assets/stats")
-async def assets_stats() -> dict[str, Any]:
-    manifest = load_manifest()
-    preferred_count = sum(1 for x in manifest if x.get("preferred"))
-    total_usage = sum(int(x.get("usage_count", 0) or 0) for x in manifest)
-    total_success = sum(int(x.get("success_count", 0) or 0) for x in manifest)
-    total_fail = sum(int(x.get("fail_count", 0) or 0) for x in manifest)
-
-    return {
-        "ok": True,
-        "asset_count": len(manifest),
-        "preferred_count": preferred_count,
-        "total_usage": total_usage,
-        "total_success": total_success,
-        "total_fail": total_fail,
-    }
+@app.get("/draft")
+def draft_get(name: str):
+    draft = get_draft(name)
+    if not draft:
+        return JSONResponse({"error": "Taslak bulunamadı"}, status_code=404)
+    return draft
 
 
-@app.post("/assets/create_manual")
-async def create_manual_asset(
-    label: str = Form(...),
-    tags: str = Form(""),
-    interests: str = Form(""),
-    notes: str = Form(""),
-    preferred: str = Form("false"),
-    image: UploadFile = File(...),
-) -> dict[str, Any]:
-    label = (label or "").strip()
-    if not label:
-        raise HTTPException(status_code=400, detail="label gerekli")
+@app.post("/draft/save")
+def draft_save(payload: dict):
+    name = payload.get("name", "").strip()
+    data = payload.get("payload", {})
+    if not name:
+        return JSONResponse({"error": "Taslak adı boş olamaz"}, status_code=400)
+    return add_draft(name, data)
 
-    if not image.filename:
-        raise HTTPException(status_code=400, detail="görsel dosyası gerekli")
 
-    ext = Path(image.filename).suffix.lower()
-    if ext not in {".jpg", ".jpeg", ".png", ".webp", ".bmp"}:
-        ext = ".jpg"
+@app.post("/draft/delete")
+def draft_delete(name: str):
+    return delete_draft(name)
 
-    asset_id = build_asset_id(label)
-    image_path = LIBRARY_DIR / f"{asset_id}{ext}"
-    thumb_path = THUMBS_DIR / f"{asset_id}.jpg"
 
-    with open(image_path, "wb") as f:
-        shutil.copyfileobj(image.file, f)
+# ---- Test modu yardımcıları ----
+
+@app.post("/dev/fake_speech")
+def dev_fake_speech():
+    if get_mode() != "test":
+        return JSONResponse(
+            {"ok": False, "error": "Sadece test modunda kullanılabilir"},
+            status_code=400,
+        )
 
     try:
-        make_thumbnail(image_path, thumb_path)
+        requests.post(
+            "http://127.0.0.1:8000/speech",
+            json={
+                "video_id": "test_video",
+                "speech_attempt": True,
+                "speech_level": "word",
+                "response_time": 1.4,
+                "target_word": "top",
+                "child_output": "top",
+                "success_level": "full_word",
+            },
+            timeout=5,
+        )
+        requests.post(
+            "http://127.0.0.1:8000/speech",
+            json={
+                "video_id": "test_video",
+                "speech_attempt": True,
+                "speech_level": "phrase",
+                "response_time": 2.0,
+                "phrase": "mavi top",
+                "success_level": "two_word_phrase",
+                "spontaneous": True,
+            },
+            timeout=5,
+        )
+        return {"ok": True}
     except Exception as e:
-        if image_path.exists():
-            image_path.unlink(missing_ok=True)
-        raise HTTPException(status_code=400, detail=f"thumbnail üretilemedi: {e}")
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 
-    manifest = load_manifest()
 
-    item = {
-        "asset_id": asset_id,
-        "label": label,
-        "tags": parse_csv_text(tags),
-        "interests": parse_csv_text(interests),
-        "notes": (notes or "").strip(),
-        "preferred": str(preferred).lower() == "true",
-        "type": "image",
-        "image_path": f"/assets/library/{image_path.name}",
-        "thumb_path": f"/assets/library/thumbs/{thumb_path.name}",
-        "created_at": now_iso(),
-        "updated_at": now_iso(),
-        "usage_count": 0,
-        "success_count": 0,
-        "fail_count": 0,
-        "preferred_score": 0.0,
-        "attention_score": 0.0,
-        "speech_success_score": 0.0,
-    }
+# ---- Otonom seans ----
 
-    manifest.append(item)
-    save_manifest(manifest)
+@app.get("/autonomy/settings")
+def autonomy_settings_get():
+    return autonomy_load_settings()
 
+
+@app.post("/autonomy/settings/save")
+def autonomy_settings_save(payload: dict):
+    saved = autonomy_save_settings(payload)
+    return {"ok": True, "settings": saved}
+
+
+@app.get("/autonomy/session/state")
+def autonomy_session_state():
+    return autonomy_get_session_state()
+
+
+@app.post("/autonomy/session/start")
+def autonomy_session_start(payload: dict | None = None):
+    payload = payload or {}
+    return autonomy_start_session(payload)
+
+
+@app.post("/autonomy/session/stop")
+def autonomy_session_stop(reason: str = "manual_stop"):
+    return autonomy_stop_session(reason=reason)
+
+
+@app.post("/autonomy/session/tick")
+def autonomy_session_tick(force: bool = False):
+    return autonomy_tick_session(force=force)
+
+
+# ---- Asset Stüdyosu ----
+
+@app.get("/assets/list")
+def assets_list(
+    q: str = "",
+    label: str = "",
+    tag: str = "",
+    interest: str = "",
+    status: str = "",
+):
     return {
-        "ok": True,
-        "item": item,
+        "assets": list_assets(
+            q=q,
+            label=label,
+            tag=tag,
+            interest=interest,
+            status=status,
+        )
     }
+
+
+@app.get("/assets/get")
+def assets_get(asset_id: str):
+    item = get_asset(asset_id)
+    if not item:
+        return JSONResponse({"error": "Asset bulunamadı"}, status_code=404)
+    return item
+
+
+@app.post("/assets/create")
+def assets_create(payload: dict):
+    try:
+        item = create_asset(payload)
+        return {"ok": True, "asset": item}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
 
 
 @app.post("/assets/update")
-async def update_asset(
-    asset_id: str = Form(...),
-    label: str = Form(""),
-    tags: str = Form(""),
-    interests: str = Form(""),
-    notes: str = Form(""),
-    preferred: str = Form("false"),
-) -> dict[str, Any]:
-    manifest = load_manifest()
-    target = None
-
-    for item in manifest:
-        if item.get("asset_id") == asset_id:
-            target = item
-            break
-
-    if target is None:
-        raise HTTPException(status_code=404, detail="asset bulunamadı")
-
-    if label.strip():
-        target["label"] = label.strip()
-
-    target["tags"] = parse_csv_text(tags)
-    target["interests"] = parse_csv_text(interests)
-    target["notes"] = notes.strip()
-    target["preferred"] = str(preferred).lower() == "true"
-    target["updated_at"] = now_iso()
-
-    save_manifest(manifest)
-
-    return {
-        "ok": True,
-        "item": target,
-    }
+def assets_update(asset_id: str, payload: dict):
+    try:
+        item = update_asset(asset_id, payload)
+        return {"ok": True, "asset": item}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
 
 
-@app.post("/assets/delete")
-async def delete_asset(asset_id: str = Form(...)) -> dict[str, Any]:
-    manifest = load_manifest()
-    kept: list[dict[str, Any]] = []
-    target = None
-
-    for item in manifest:
-        if item.get("asset_id") == asset_id:
-            target = item
-        else:
-            kept.append(item)
-
-    if target is None:
-        raise HTTPException(status_code=404, detail="asset bulunamadı")
-
-    image_rel = target.get("image_path", "")
-    thumb_rel = target.get("thumb_path", "")
-
-    if image_rel.startswith("/assets/"):
-        image_abs = ASSETS_DIR / image_rel.replace("/assets/", "", 1)
-        Path(image_abs).unlink(missing_ok=True)
-
-    if thumb_rel.startswith("/assets/"):
-        thumb_abs = ASSETS_DIR / thumb_rel.replace("/assets/", "", 1)
-        Path(thumb_abs).unlink(missing_ok=True)
-
-    save_manifest(kept)
-
-    return {
-        "ok": True,
-        "deleted_asset_id": asset_id,
-    }
+@app.get("/assets/stats")
+def assets_stats():
+    return asset_stats()
 
 
-@app.exception_handler(Exception)
-async def generic_exception_handler(request, exc):
-    return JSONResponse(
-        status_code=500,
-        content={
-            "ok": False,
-            "error": str(exc),
-        },
-    )
+@app.get("/assets/history")
+def assets_history(limit: int = 100):
+    return {"items": list_asset_history(limit=limit)}
 
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("parent_panel:app", host="0.0.0.0", port=7000, reload=False)
+# ---- Panel için proxy endpointler ----
+
+@app.get("/panel/api/summary")
+def panel_api_summary():
+    return safe_get_json("http://127.0.0.1:9000/api/summary")
+
+
+@app.get("/panel/api/milestones")
+def panel_api_milestones():
+    return safe_get_json("http://127.0.0.1:9000/api/milestones")
+
+
+@app.get("/panel/api/ai_decision")
+def panel_api_ai_decision():
+    return safe_get_json("http://127.0.0.1:8000/ai_decision")
