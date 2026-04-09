@@ -1,644 +1,1153 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pi Tablet Parent Panel</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ebeveyn Kontrol Dashboard</title>
   <style>
-    :root {
-      --bg: #f5f7fb;
-      --card: #ffffff;
-      --text: #202531;
-      --muted: #6b7280;
-      --line: #e5e7eb;
-      --accent: #2563eb;
-      --accent-soft: #dbeafe;
-      --danger: #dc2626;
-      --success: #059669;
-      --shadow: 0 10px 25px rgba(0,0,0,0.06);
-      --radius: 18px;
+    :root{
+      --bg:#0f172a;
+      --panel:#111827;
+      --panel-2:#1f2937;
+      --card:#111827;
+      --muted:#94a3b8;
+      --text:#e5e7eb;
+      --line:#334155;
+      --accent:#22c55e;
+      --accent-2:#38bdf8;
+      --warn:#f59e0b;
+      --danger:#ef4444;
+      --chip:#0b1220;
+      --shadow:0 10px 25px rgba(0,0,0,.25);
+      --radius:18px;
     }
 
-    * {
-      box-sizing: border-box;
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      background:linear-gradient(180deg,#0b1220,#111827);
+      color:var(--text);
     }
 
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: var(--bg);
-      color: var(--text);
+    .wrap{
+      max-width:1480px;
+      margin:0 auto;
+      padding:20px;
     }
 
-    .page {
-      max-width: 1300px;
-      margin: 0 auto;
-      padding: 24px;
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:18px;
+      flex-wrap:wrap;
     }
 
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 24px;
+    .topbar h1{
+      margin:0;
+      font-size:28px;
     }
 
-    .title-wrap h1 {
-      margin: 0 0 6px 0;
-      font-size: 28px;
+    .sub{
+      color:var(--muted);
+      margin-top:6px;
+      font-size:14px;
     }
 
-    .title-wrap p {
-      margin: 0;
-      color: var(--muted);
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#0b1220;
+      color:#cbd5e1;
+      font-size:13px;
+      white-space:nowrap;
     }
 
-    .status-pill {
-      background: var(--accent-soft);
-      color: var(--accent);
-      border-radius: 999px;
-      padding: 10px 14px;
-      font-weight: 700;
-      white-space: nowrap;
+    .dot{
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:var(--accent);
+      box-shadow:0 0 12px rgba(34,197,94,.8);
     }
 
-    .grid {
-      display: grid;
-      grid-template-columns: 380px 1fr;
-      gap: 20px;
-      align-items: start;
+    .metrics{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:14px;
+      margin-bottom:18px;
     }
 
-    .card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 20px;
+    .metric{
+      background:rgba(17,24,39,.92);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px;
     }
 
-    .card h2 {
-      margin-top: 0;
-      margin-bottom: 18px;
-      font-size: 20px;
+    .metric .k{
+      color:var(--muted);
+      font-size:13px;
+      margin-bottom:8px;
     }
 
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
+    .metric .v{
+      font-size:28px;
+      font-weight:700;
     }
 
-    .form-row {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+    .tabs{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:18px;
     }
 
-    label {
-      font-weight: 700;
-      font-size: 14px;
+    .tab-btn{
+      background:#0b1220;
+      color:#cbd5e1;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:10px 14px;
+      cursor:pointer;
     }
 
-    input[type="text"],
-    textarea,
-    input[type="file"] {
-      width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 12px 14px;
-      font-size: 14px;
-      background: #fff;
+    .tab-btn.active{
+      background:#1d4ed8;
+      border-color:#2563eb;
+      color:#fff;
     }
 
-    textarea {
-      resize: vertical;
-      min-height: 90px;
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:1.05fr .95fr;
+      gap:18px;
     }
 
-    .checkbox-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .panel{
+      background:rgba(17,24,39,.94);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
     }
 
-    .thumb-preview-panel {
-      margin-top: 8px;
+    .panel h2,.panel h3{
+      margin:0 0 14px 0;
     }
 
-    .thumb-title {
-      font-weight: 700;
-      margin-bottom: 8px;
-      font-size: 14px;
+    .section-note{
+      color:var(--muted);
+      font-size:13px;
+      margin-bottom:12px;
     }
 
-    .thumb-box {
-      width: 100%;
-      max-width: 260px;
-      height: 260px;
-      border: 2px dashed #c7ced8;
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      background: #fafafa;
+    .row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
     }
 
-    #assetThumbPreview {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: none;
+    .field{
+      margin-bottom:12px;
     }
 
-    #assetThumbPlaceholder {
-      color: var(--muted);
-      font-size: 14px;
-      text-align: center;
-      padding: 16px;
+    .field label{
+      display:block;
+      font-size:13px;
+      color:#cbd5e1;
+      margin-bottom:7px;
     }
 
-    .form-actions {
-      margin-top: 18px;
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
+    .field input[type="text"],
+    .field input[type="number"],
+    .field textarea,
+    .field select{
+      width:100%;
+      border:1px solid var(--line);
+      background:#0b1220;
+      color:var(--text);
+      border-radius:12px;
+      padding:11px 12px;
+      outline:none;
     }
 
-    button {
-      border: none;
-      border-radius: 12px;
-      padding: 12px 16px;
-      font-weight: 700;
-      cursor: pointer;
-      background: var(--accent);
-      color: white;
+    .field textarea{
+      resize:vertical;
+      min-height:88px;
     }
 
-    button.secondary {
-      background: #eef2ff;
-      color: #3730a3;
+    .check{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      color:#cbd5e1;
+      font-size:14px;
+      margin-top:8px;
     }
 
-    button.danger {
-      background: #fee2e2;
-      color: var(--danger);
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:8px;
     }
 
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-      margin-bottom: 18px;
+    button{
+      border:1px solid transparent;
+      background:#1d4ed8;
+      color:#fff;
+      padding:10px 14px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:600;
     }
 
-    .stat-box {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: var(--shadow);
+    button.alt{
+      background:#0b1220;
+      border-color:var(--line);
+      color:#cbd5e1;
     }
 
-    .stat-box .k {
-      color: var(--muted);
-      font-size: 13px;
-      margin-bottom: 8px;
+    button.warn{
+      background:#92400e;
     }
 
-    .stat-box .v {
-      font-size: 24px;
-      font-weight: 800;
+    button.danger{
+      background:#7f1d1d;
     }
 
-    .assets-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 14px;
-      gap: 12px;
-      flex-wrap: wrap;
+    .preview-shell{
+      display:grid;
+      grid-template-columns:280px 1fr;
+      gap:16px;
+      align-items:start;
     }
 
-    .assets-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 16px;
+    .thumb-box{
+      width:100%;
+      aspect-ratio:1/1;
+      border:1px dashed #475569;
+      border-radius:18px;
+      background:#0b1220;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      color:var(--muted);
+      text-align:center;
+      padding:16px;
     }
 
-    .asset-card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      overflow: hidden;
-      box-shadow: var(--shadow);
+    .thumb-box img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:none;
     }
 
-    .asset-thumb {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      display: block;
-      background: #f3f4f6;
+    .preview-meta{
+      border:1px solid var(--line);
+      background:#0b1220;
+      border-radius:16px;
+      padding:14px;
+      min-height:280px;
     }
 
-    .asset-content {
-      padding: 14px;
+    .small{
+      color:var(--muted);
+      font-size:12px;
     }
 
-    .asset-title {
-      font-size: 18px;
-      font-weight: 800;
-      margin: 0 0 8px 0;
+    .msg{
+      min-height:20px;
+      margin-top:10px;
+      font-size:14px;
+      font-weight:600;
     }
 
-    .asset-meta {
-      color: var(--muted);
-      font-size: 13px;
-      margin-bottom: 8px;
+    .msg.ok{color:#4ade80}
+    .msg.err{color:#f87171}
+
+    .searchbar{
+      display:grid;
+      grid-template-columns:2fr 1fr 1fr 1fr auto;
+      gap:10px;
+      margin-bottom:14px;
     }
 
-    .tag-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin: 8px 0 10px 0;
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+      gap:14px;
     }
 
-    .tag {
-      background: #f3f4f6;
-      color: #374151;
-      border-radius: 999px;
-      padding: 6px 10px;
-      font-size: 12px;
+    .asset-card{
+      background:#0b1220;
+      border:1px solid var(--line);
+      border-radius:18px;
+      overflow:hidden;
     }
 
-    .asset-notes {
-      font-size: 14px;
-      color: #374151;
-      min-height: 36px;
-      margin-bottom: 12px;
+    .asset-card img{
+      width:100%;
+      height:190px;
+      object-fit:cover;
+      background:#111827;
+      display:block;
     }
 
-    .asset-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
+    .asset-body{
+      padding:14px;
     }
 
-    .muted {
-      color: var(--muted);
+    .asset-title{
+      font-size:18px;
+      font-weight:700;
+      margin-bottom:8px;
     }
 
-    .message {
-      margin-top: 12px;
-      font-size: 14px;
-      font-weight: 700;
+    .asset-id{
+      color:var(--muted);
+      font-size:12px;
+      margin-bottom:10px;
+      word-break:break-all;
     }
 
-    .message.ok {
-      color: var(--success);
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      margin:8px 0;
     }
 
-    .message.err {
-      color: var(--danger);
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      background:#111827;
+      border:1px solid var(--line);
+      color:#cbd5e1;
+      border-radius:999px;
+      padding:5px 9px;
+      font-size:12px;
     }
 
-    @media (max-width: 980px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
-
-      .stats {
-        grid-template-columns: repeat(2, 1fr);
-      }
+    .notes{
+      min-height:42px;
+      color:#d1d5db;
+      font-size:14px;
+      margin:10px 0;
+      white-space:pre-wrap;
     }
 
-    @media (max-width: 560px) {
-      .stats {
-        grid-template-columns: 1fr;
-      }
+    .asset-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
+    .mono{
+      font-family:Consolas,Monaco,monospace;
+    }
+
+    .queue-box,.history-box{
+      background:#0b1220;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      min-height:120px;
+      overflow:auto;
+    }
+
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .list-item{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      background:#0b1220;
+    }
+
+    @media (max-width:1100px){
+      .grid-2{grid-template-columns:1fr}
+      .preview-shell{grid-template-columns:1fr}
+      .searchbar{grid-template-columns:1fr 1fr}
+      .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+
+    @media (max-width:700px){
+      .row{grid-template-columns:1fr}
+      .searchbar{grid-template-columns:1fr}
+      .metrics{grid-template-columns:1fr}
     }
   </style>
 </head>
 <body>
-  <div class="page">
+  <div class="wrap">
     <div class="topbar">
-      <div class="title-wrap">
-        <h1>Pi Tablet Parent Panel</h1>
-        <p>Manuel asset oluşturma ve thumbnail önizleme paneli</p>
+      <div>
+        <h1>Ebeveyn Denetim ve Gelişim Paneli</h1>
+        <div class="sub">Manuel asset odaklı sade panel</div>
       </div>
-      <div id="serverStatus" class="status-pill">Server kontrol ediliyor...</div>
+      <div class="badge">
+        <span class="dot"></span>
+        <span id="serverStatusText">Durum yükleniyor</span>
+      </div>
     </div>
 
-    <div class="stats">
-      <div class="stat-box">
+    <div class="metrics">
+      <div class="metric">
         <div class="k">Toplam Asset</div>
-        <div class="v" id="statAssetCount">0</div>
+        <div class="v" id="statTotalAssets">0</div>
       </div>
-      <div class="stat-box">
+      <div class="metric">
         <div class="k">Preferred</div>
-        <div class="v" id="statPreferredCount">0</div>
+        <div class="v" id="statPreferred">0</div>
       </div>
-      <div class="stat-box">
-        <div class="k">Toplam Usage</div>
-        <div class="v" id="statUsageCount">0</div>
+      <div class="metric">
+        <div class="k">Toplam Kullanım</div>
+        <div class="v" id="statUsed">0</div>
       </div>
-      <div class="stat-box">
-        <div class="k">Toplam Success</div>
-        <div class="v" id="statSuccessCount">0</div>
-      </div>
-    </div>
-
-    <div class="grid">
-      <div class="card">
-        <h2>Manuel Asset Oluştur</h2>
-
-        <div class="form-grid">
-          <div class="form-row">
-            <label for="assetLabel">Asset Adı</label>
-            <input id="assetLabel" type="text" placeholder="örn: top">
-          </div>
-
-          <div class="form-row">
-            <label for="assetTags">Etiketler</label>
-            <input id="assetTags" type="text" placeholder="örn: oyuncak, yuvarlak">
-          </div>
-
-          <div class="form-row">
-            <label for="assetInterests">İlgi Alanları</label>
-            <input id="assetInterests" type="text" placeholder="örn: top, oyun">
-          </div>
-
-          <div class="form-row">
-            <label for="assetNotes">Notlar</label>
-            <textarea id="assetNotes" placeholder="örn: kırmızı plastik top"></textarea>
-          </div>
-
-          <div class="form-row">
-            <label for="assetImageFile">Görsel Seç</label>
-            <input id="assetImageFile" type="file" accept="image/*">
-          </div>
-
-          <div class="form-row checkbox-row">
-            <input id="assetPreferred" type="checkbox">
-            <label for="assetPreferred" style="margin:0;">Preferred olarak işaretle</label>
-          </div>
-        </div>
-
-        <div class="thumb-preview-panel">
-          <div class="thumb-title">Thumbnail Önizleme</div>
-          <div class="thumb-box">
-            <img id="assetThumbPreview" src="" alt="thumb">
-            <div id="assetThumbPlaceholder">Henüz görsel seçilmedi</div>
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <button onclick="createManualAsset()">Asset Oluştur</button>
-          <button class="secondary" onclick="resetAssetForm()">Formu Temizle</button>
-        </div>
-
-        <div id="formMessage" class="message"></div>
-      </div>
-
-      <div class="card">
-        <div class="assets-header">
-          <h2 style="margin:0;">Asset Kütüphanesi</h2>
-          <button class="secondary" onclick="refreshAll()">Yenile</button>
-        </div>
-        <div id="assetsGrid" class="assets-grid"></div>
+      <div class="metric">
+        <div class="k">Aktif Asset</div>
+        <div class="v" id="statActive">0</div>
       </div>
     </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="controlTab">Canlı Kontrol</button>
+      <button class="tab-btn" data-tab="contentTab">İçerik</button>
+      <button class="tab-btn" data-tab="assetTab">Asset Stüdyosu</button>
+      <button class="tab-btn" data-tab="piTab">Pi</button>
+    </div>
+
+    <section id="controlTab" class="tab-panel active">
+      <div class="grid-2">
+        <div class="panel">
+          <h2>Canlı Kontrol</h2>
+          <div class="section-note">Pi ekranına komut gönder</div>
+
+          <div class="field">
+            <label>Konuşma Kartları</label>
+            <input id="speechWordsInput" type="text" placeholder="örn: top, araba, kedi">
+          </div>
+
+          <div class="actions">
+            <button onclick="sendSpeechCards()">Konuşma Kartları Gönder</button>
+            <button class="alt" onclick="refreshQueue()">Kuyruğu Yenile</button>
+          </div>
+
+          <hr style="border-color:var(--line); margin:18px 0;">
+
+          <div class="row">
+            <div class="field">
+              <label>Oyun Tipi</label>
+              <input id="gameTypeInput" type="text" placeholder="örn: object_match">
+            </div>
+            <div class="field">
+              <label>Hedef</label>
+              <input id="gameTargetInput" type="text" placeholder="örn: top">
+            </div>
+          </div>
+
+          <div class="actions">
+            <button onclick="sendGamePayload()">Oyun Gönder</button>
+            <button class="warn" onclick="shutdownAfter()">Süreli Kapat</button>
+            <button class="danger" onclick="shutdownNow()">Hemen Kapat</button>
+          </div>
+
+          <div id="controlMessage" class="msg"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Komut Kuyruğu</h2>
+          <div id="queueBox" class="queue-box mono">Yükleniyor...</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contentTab" class="tab-panel">
+      <div class="grid-2">
+        <div class="panel">
+          <h2>AI İçerik Stüdyosu</h2>
+
+          <div class="field">
+            <label>Taslak Adı</label>
+            <input id="draftName" type="text" placeholder="örn: top_oturumu">
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Ekran Tipi</label>
+              <select id="contentScreenType">
+                <option value="speech_cards">Konuşma Kartları</option>
+                <option value="interactive_game">Görsel Oyun</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Hedef Kelime</label>
+              <input id="contentTargetWord" type="text" placeholder="örn: top">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>İlgi Alanı</label>
+              <input id="contentInterest" type="text" placeholder="örn: oyuncak">
+            </div>
+            <div class="field">
+              <label>Oyun Tipi</label>
+              <input id="contentGameType" type="text" placeholder="örn: object_match">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Terapi / İçerik Notları</label>
+            <textarea id="contentNotes" placeholder="İçerik notlarını buraya yaz"></textarea>
+          </div>
+
+          <div class="actions">
+            <button onclick="saveDraft()">Taslağı Kaydet</button>
+            <button class="alt" onclick="loadDrafts()">Taslakları Yenile</button>
+            <button onclick="buildPayloadPreview()">Payload Önizle</button>
+            <button class="alt" onclick="sendPreviewPayload()">Pi'ye Gönder</button>
+          </div>
+
+          <div id="contentMessage" class="msg"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Gönderilecek Payload</h2>
+          <div id="payloadPreview" class="queue-box mono">{}</div>
+
+          <h3 style="margin-top:18px;">Kayıtlı Taslaklar</h3>
+          <div id="draftList" class="list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="assetTab" class="tab-panel">
+      <div class="grid-2">
+        <div class="panel">
+          <h2>Manuel Asset Oluştur</h2>
+          <div class="section-note">Open Images ve çeviri kaldırıldı. Dosya yerelden seçilir, önizleme tarayıcıda gösterilir, kayıt JSON olarak yapılır.</div>
+
+          <div class="preview-shell">
+            <div>
+              <div class="thumb-box">
+                <img id="thumbPreview" alt="Önizleme">
+                <div id="thumbPlaceholder">Seçilen görsel burada önizlenecek</div>
+              </div>
+            </div>
+
+            <div class="preview-meta">
+              <div class="field">
+                <label>Görsel Seç</label>
+                <input id="assetImageInput" type="file" accept="image/*">
+              </div>
+
+              <div class="field">
+                <label>Türkçe Label</label>
+                <input id="assetLabelTr" type="text" placeholder="örn: top">
+              </div>
+
+              <div class="field">
+                <label>Etiketler</label>
+                <input id="assetTagsTr" type="text" placeholder="örn: oyuncak, yuvarlak">
+              </div>
+
+              <div class="field">
+                <label>İlgi Alanları</label>
+                <input id="assetInterestsTr" type="text" placeholder="örn: top, oyun">
+              </div>
+
+              <div class="check">
+                <input id="assetPreferred" type="checkbox">
+                <label for="assetPreferred" style="margin:0;">Preferred</label>
+              </div>
+
+              <div class="field">
+                <label>Notlar</label>
+                <textarea id="assetNotes" placeholder="örn: evdeki kırmızı top"></textarea>
+              </div>
+
+              <div class="actions">
+                <button onclick="createManualAsset()">Asset Kaydet</button>
+                <button class="alt" onclick="resetAssetForm()">Formu Temizle</button>
+              </div>
+
+              <div id="assetCreateMessage" class="msg"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Asset İstatistikleri</h2>
+          <div id="assetStatsBox" class="queue-box mono">Yükleniyor...</div>
+
+          <h3 style="margin-top:18px;">Asset Geçmişi</h3>
+          <div id="assetHistoryBox" class="history-box mono">Yükleniyor...</div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:18px;">
+        <h2>Manifest Tarayıcı</h2>
+
+        <div class="searchbar">
+          <input id="filterQ" type="text" placeholder="Arama">
+          <input id="filterLabel" type="text" placeholder="Label">
+          <input id="filterTag" type="text" placeholder="Tag">
+          <input id="filterInterest" type="text" placeholder="Interest">
+          <button onclick="loadAssets()">Listele</button>
+        </div>
+
+        <div id="assetsGrid" class="cards"></div>
+      </div>
+    </section>
+
+    <section id="piTab" class="tab-panel">
+      <div class="grid-2">
+        <div class="panel">
+          <h2>Pi Yönetimi</h2>
+          <div class="actions">
+            <button onclick="shutdownAfter()">Süreli Kapat</button>
+            <button class="danger" onclick="shutdownNow()">Hemen Kapat</button>
+          </div>
+
+          <h3 style="margin-top:18px;">Sunucu Kontrol Merkezi</h3>
+          <div class="row">
+            <div class="field">
+              <label>Çalışma Modu</label>
+              <select id="modeSelect">
+                <option value="prod">PROD</option>
+                <option value="test">TEST</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <button onclick="applyMode()">Modu Uygula</button>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="alt" onclick="startAllServers()">Tümünü Başlat</button>
+            <button class="alt" onclick="stopAllServers()">Tümünü Durdur</button>
+            <button class="alt" onclick="stopAllServersSafe()">Güvenli Durdur</button>
+            <button class="warn" onclick="fakeSpeech()">Test Verisi Üret</button>
+          </div>
+
+          <div id="piMessage" class="msg"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Sunucu Durumları</h2>
+          <div id="serverStatusBox" class="queue-box mono">Yükleniyor...</div>
+
+          <h3 style="margin-top:18px;">Otonom Seans</h3>
+          <div class="actions">
+            <button onclick="startAutonomy()">Seansı Başlat</button>
+            <button class="alt" onclick="tickAutonomy()">Tick</button>
+            <button class="danger" onclick="stopAutonomy()">Seansı Durdur</button>
+          </div>
+
+          <div id="autonomyStateBox" class="queue-box mono" style="margin-top:12px;">Yükleniyor...</div>
+        </div>
+      </div>
+    </section>
   </div>
 
   <script>
-    const assetImageInput = document.getElementById("assetImageFile");
-    const thumbPreview = document.getElementById("assetThumbPreview");
-    const thumbPlaceholder = document.getElementById("assetThumbPlaceholder");
-    const formMessage = document.getElementById("formMessage");
+    let selectedImageBase64 = "";
+    let selectedImageMime = "image/png";
 
-    function setMessage(text, ok = true) {
-      formMessage.textContent = text || "";
-      formMessage.className = ok ? "message ok" : "message err";
+    function el(id){ return document.getElementById(id); }
+
+    function setMsg(id, text, ok = true){
+      const node = el(id);
+      if (!node) return;
+      node.textContent = text || "";
+      node.className = ok ? "msg ok" : "msg err";
     }
 
-    function escapeHtml(text) {
-      return String(text || "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#39;");
+    function esc(v){
+      return String(v ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#39;");
     }
 
-    function renderTags(items) {
-      if (!items || !items.length) return "";
-      return items.map(x => `<span class="tag">${escapeHtml(x)}</span>`).join("");
+    function pretty(obj){
+      return JSON.stringify(obj, null, 2);
     }
 
-    function resetAssetForm() {
-      document.getElementById("assetLabel").value = "";
-      document.getElementById("assetTags").value = "";
-      document.getElementById("assetInterests").value = "";
-      document.getElementById("assetNotes").value = "";
-      document.getElementById("assetPreferred").checked = false;
-      document.getElementById("assetImageFile").value = "";
-
-      thumbPreview.style.display = "none";
-      thumbPreview.src = "";
-      thumbPlaceholder.style.display = "block";
-
-      setMessage("");
+    function csvToList(v){
+      return String(v || "")
+        .split(",")
+        .map(x => x.trim())
+        .filter(Boolean);
     }
 
-    if (assetImageInput) {
-      assetImageInput.addEventListener("change", function () {
-        const file = this.files && this.files[0];
+    function toDataUrlPayload(dataUrl){
+      return dataUrl || "";
+    }
 
-        if (!file) {
-          thumbPreview.style.display = "none";
-          thumbPreview.src = "";
-          thumbPlaceholder.style.display = "block";
-          return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          thumbPreview.src = e.target.result;
-          thumbPreview.style.display = "block";
-          thumbPlaceholder.style.display = "none";
-        };
-        reader.readAsDataURL(file);
+    async function api(url, options = {}){
+      const res = await fetch(url, {
+        headers: { "Content-Type": "application/json" },
+        ...options
       });
+      return res.json();
     }
 
-    async function loadServerStatus() {
-      try {
-        const res = await fetch("/server/status");
-        const data = await res.json();
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(x => x.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(x => x.classList.remove("active"));
+        btn.classList.add("active");
+        el(btn.dataset.tab).classList.add("active");
+      });
+    });
 
-        if (data.ok) {
-          document.getElementById("serverStatus").textContent = `Server aktif • ${data.asset_count} asset`;
-        } else {
-          document.getElementById("serverStatus").textContent = "Server hatası";
-        }
-      } catch (err) {
-        document.getElementById("serverStatus").textContent = "Server erişilemedi";
+    el("assetImageInput").addEventListener("change", ev => {
+      const file = ev.target.files?.[0];
+      if (!file){
+        selectedImageBase64 = "";
+        el("thumbPreview").style.display = "none";
+        el("thumbPreview").src = "";
+        el("thumbPlaceholder").style.display = "block";
+        return;
       }
+
+      selectedImageMime = file.type || "image/png";
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        const dataUrl = e.target?.result || "";
+        selectedImageBase64 = String(dataUrl);
+        el("thumbPreview").src = selectedImageBase64;
+        el("thumbPreview").style.display = "block";
+        el("thumbPlaceholder").style.display = "none";
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function resetAssetForm(){
+      el("assetImageInput").value = "";
+      el("assetLabelTr").value = "";
+      el("assetTagsTr").value = "";
+      el("assetInterestsTr").value = "";
+      el("assetNotes").value = "";
+      el("assetPreferred").checked = false;
+      selectedImageBase64 = "";
+      selectedImageMime = "image/png";
+      el("thumbPreview").style.display = "none";
+      el("thumbPreview").src = "";
+      el("thumbPlaceholder").style.display = "block";
+      setMsg("assetCreateMessage", "");
     }
 
-    async function loadStats() {
-      try {
-        const res = await fetch("/assets/stats");
-        const data = await res.json();
+    async function createManualAsset(){
+      const labelTr = el("assetLabelTr").value.trim();
+      const tagsTr = csvToList(el("assetTagsTr").value);
+      const interestsTr = csvToList(el("assetInterestsTr").value);
+      const notes = el("assetNotes").value.trim();
+      const preferred = el("assetPreferred").checked;
 
-        if (!data.ok) return;
-
-        document.getElementById("statAssetCount").textContent = data.asset_count ?? 0;
-        document.getElementById("statPreferredCount").textContent = data.preferred_count ?? 0;
-        document.getElementById("statUsageCount").textContent = data.total_usage ?? 0;
-        document.getElementById("statSuccessCount").textContent = data.total_success ?? 0;
-      } catch (err) {
-        console.error(err);
+      if (!labelTr){
+        setMsg("assetCreateMessage", "Türkçe label gerekli", false);
+        return;
       }
+
+      if (!selectedImageBase64){
+        setMsg("assetCreateMessage", "Bir görsel seçmelisin", false);
+        return;
+      }
+
+      const payload = {
+        label_tr: labelTr,
+        tags_tr: tagsTr,
+        interests_tr: interestsTr,
+        preferred,
+        notes,
+        source: "manual",
+        image_base64: toDataUrlPayload(selectedImageBase64)
+      };
+
+      const data = await api("/assets/create", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+
+      if (!data.ok){
+        setMsg("assetCreateMessage", data.error || "Asset kaydedilemedi", false);
+        return;
+      }
+
+      setMsg("assetCreateMessage", "Asset kaydedildi", true);
+      resetAssetForm();
+      await loadAssets();
+      await loadAssetStats();
+      await loadAssetHistory();
+      await loadServerStatus();
     }
 
-    async function loadAssets() {
-      const grid = document.getElementById("assetsGrid");
-      grid.innerHTML = `<div class="muted">Yükleniyor...</div>`;
+    async function loadAssets(){
+      const q = encodeURIComponent(el("filterQ").value.trim());
+      const label = encodeURIComponent(el("filterLabel").value.trim());
+      const tag = encodeURIComponent(el("filterTag").value.trim());
+      const interest = encodeURIComponent(el("filterInterest").value.trim());
 
-      try {
-        const res = await fetch("/assets/list");
-        const data = await res.json();
+      const data = await api(`/assets/list?q=${q}&label=${label}&tag=${tag}&interest=${interest}&status=active`);
+      const items = data.assets || [];
+      const root = el("assetsGrid");
 
-        if (!data.ok) {
-          grid.innerHTML = `<div class="muted">Asset listesi alınamadı</div>`;
-          return;
-        }
+      if (!items.length){
+        root.innerHTML = `<div class="small">Henüz asset yok</div>`;
+        return;
+      }
 
-        const items = data.items || [];
-        if (!items.length) {
-          grid.innerHTML = `<div class="muted">Henüz asset yok</div>`;
-          return;
-        }
+      root.innerHTML = items.map(item => {
+        const tags = (item.tags_tr || []).map(x => `<span class="chip">${esc(x)}</span>`).join("");
+        const interests = (item.interests_tr || []).map(x => `<span class="chip">${esc(x)}</span>`).join("");
+        const pref = item.preferred ? `<span class="chip">preferred</span>` : "";
+        const image = esc(item.image_path || "");
+        const labelTr = esc(item.label_tr || item.label || "");
+        const notes = esc(item.notes || "");
+        const id = esc(item.asset_id || "");
 
-        grid.innerHTML = items.map(item => {
-          const tags = renderTags(item.tags || []);
-          const interests = renderTags(item.interests || []);
-          const notes = escapeHtml(item.notes || "");
-          const label = escapeHtml(item.label || "");
-          const thumb = escapeHtml(item.thumb_path || "");
-          const assetId = escapeHtml(item.asset_id || "");
-          const preferred = item.preferred ? `<span class="tag">preferred</span>` : "";
-
-          return `
-            <div class="asset-card">
-              <img class="asset-thumb" src="${thumb}" alt="${label}">
-              <div class="asset-content">
-                <div class="asset-title">${label}</div>
-                <div class="asset-meta">ID: ${assetId}</div>
-                <div class="tag-list">${preferred}</div>
-                <div class="tag-list">${tags}</div>
-                <div class="tag-list">${interests}</div>
-                <div class="asset-notes">${notes || "Not yok"}</div>
-                <div class="asset-meta">Usage: ${item.usage_count || 0} • Success: ${item.success_count || 0} • Fail: ${item.fail_count || 0}</div>
-                <div class="asset-actions">
-                  <button class="danger" onclick="deleteAsset('${assetId}')">Sil</button>
-                </div>
+        return `
+          <div class="asset-card">
+            <img src="${image}" alt="${labelTr}">
+            <div class="asset-body">
+              <div class="asset-title">${labelTr}</div>
+              <div class="asset-id mono">${id}</div>
+              <div class="chips">${pref}${tags}</div>
+              <div class="chips">${interests}</div>
+              <div class="notes">${notes || "Not yok"}</div>
+              <div class="small">Kullanım: ${item.used_count || 0}</div>
+              <div class="asset-actions">
+                <button class="alt" onclick="fillAssetEdit('${id}')">Düzenle</button>
               </div>
             </div>
-          `;
-        }).join("");
-      } catch (err) {
-        console.error(err);
-        grid.innerHTML = `<div class="muted">Bir hata oluştu</div>`;
-      }
+          </div>
+        `;
+      }).join("");
     }
 
-    async function createManualAsset() {
-      const label = document.getElementById("assetLabel").value.trim();
-      const tags = document.getElementById("assetTags").value.trim();
-      const interests = document.getElementById("assetInterests").value.trim();
-      const notes = document.getElementById("assetNotes").value.trim();
-      const preferred = document.getElementById("assetPreferred").checked;
-      const imageFile = document.getElementById("assetImageFile").files[0];
+    async function loadAssetStats(){
+      const data = await api("/assets/stats");
+      el("assetStatsBox").textContent = pretty(data);
 
-      if (!label) {
-        setMessage("Asset adı gerekli", false);
+      el("statTotalAssets").textContent = data.total_assets ?? 0;
+      el("statPreferred").textContent = data.preferred_assets ?? 0;
+      el("statUsed").textContent = data.total_used_count ?? 0;
+      el("statActive").textContent = data.active_assets ?? 0;
+    }
+
+    async function loadAssetHistory(){
+      const data = await api("/assets/history?limit=20");
+      el("assetHistoryBox").textContent = pretty(data.items || []);
+    }
+
+    async function fillAssetEdit(assetId){
+      const item = await api(`/assets/get?asset_id=${encodeURIComponent(assetId)}`);
+      if (item.error){
+        alert(item.error);
         return;
       }
 
-      if (!imageFile) {
-        setMessage("Bir görsel seçmelisin", false);
+      document.querySelector('[data-tab="assetTab"]').click();
+      el("assetLabelTr").value = item.label_tr || "";
+      el("assetTagsTr").value = (item.tags_tr || []).join(", ");
+      el("assetInterestsTr").value = (item.interests_tr || []).join(", ");
+      el("assetNotes").value = item.notes || "";
+      el("assetPreferred").checked = !!item.preferred;
+
+      if (item.image_path){
+        el("thumbPreview").src = item.image_path;
+        el("thumbPreview").style.display = "block";
+        el("thumbPlaceholder").style.display = "none";
+      }
+
+      setMsg("assetCreateMessage", `Düzenlemek için asset seçildi: ${assetId}`, true);
+      window.__editingAssetId = assetId;
+    }
+
+    async function saveEditedAsset(){
+      if (!window.__editingAssetId){
+        setMsg("assetCreateMessage", "Önce düzenlenecek asset seç", false);
         return;
       }
 
-      try {
-        const formData = new FormData();
-        formData.append("label", label);
-        formData.append("tags", tags);
-        formData.append("interests", interests);
-        formData.append("notes", notes);
-        formData.append("preferred", preferred ? "true" : "false");
-        formData.append("image", imageFile);
+      const payload = {
+        label_tr: el("assetLabelTr").value.trim(),
+        tags_tr: csvToList(el("assetTagsTr").value),
+        interests_tr: csvToList(el("assetInterestsTr").value),
+        notes: el("assetNotes").value.trim(),
+        preferred: el("assetPreferred").checked
+      };
 
-        const res = await fetch("/assets/create_manual", {
-          method: "POST",
-          body: formData
-        });
+      const data = await api(`/assets/update?asset_id=${encodeURIComponent(window.__editingAssetId)}`, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
 
-        const data = await res.json();
-
-        if (data.ok) {
-          setMessage("Asset başarıyla oluşturuldu", true);
-          resetAssetForm();
-          await refreshAll();
-        } else {
-          setMessage(data.error || data.detail || "Asset oluşturulamadı", false);
-        }
-      } catch (err) {
-        console.error(err);
-        setMessage("İstek sırasında hata oluştu", false);
-      }
-    }
-
-    async function deleteAsset(assetId) {
-      if (!confirm(`Bu asset silinsin mi?\n${assetId}`)) {
+      if (!data.ok){
+        setMsg("assetCreateMessage", data.error || "Asset güncellenemedi", false);
         return;
       }
 
-      try {
-        const formData = new FormData();
-        formData.append("asset_id", assetId);
-
-        const res = await fetch("/assets/delete", {
-          method: "POST",
-          body: formData
-        });
-
-        const data = await res.json();
-
-        if (data.ok) {
-          await refreshAll();
-        } else {
-          alert(data.error || data.detail || "Silme başarısız");
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Silme sırasında hata oluştu");
-      }
-    }
-
-    async function refreshAll() {
-      await loadServerStatus();
-      await loadStats();
+      setMsg("assetCreateMessage", "Asset güncellendi", true);
       await loadAssets();
+      await loadAssetStats();
+      await loadAssetHistory();
+      window.__editingAssetId = "";
     }
 
-    refreshAll();
+    async function sendSpeechCards(){
+      const words = csvToList(el("speechWordsInput").value);
+      const data = await api("/screen/speech_cards", {
+        method: "POST",
+        body: JSON.stringify(words)
+      });
+      setMsg("controlMessage", data.ok === false ? (data.error || "Gönderilemedi") : "Konuşma kartları gönderildi", data.ok !== false);
+      await refreshQueue();
+    }
+
+    async function sendGamePayload(){
+      const payload = {
+        game_type: el("gameTypeInput").value.trim(),
+        target: el("gameTargetInput").value.trim()
+      };
+      const data = await api("/screen/game", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      setMsg("controlMessage", data.ok === false ? (data.error || "Gönderilemedi") : "Oyun payload gönderildi", data.ok !== false);
+      await refreshQueue();
+    }
+
+    async function shutdownAfter(){
+      const minutes = Number(prompt("Kaç dakika sonra kapansın?", "10") || "0");
+      if (!minutes) return;
+      const data = await api(`/session/shutdown_after?minutes=${minutes}`, { method: "POST" });
+      setMsg("piMessage", data.ok === false ? (data.error || "İşlem başarısız") : "Süreli kapatma komutu gönderildi", data.ok !== false);
+      await refreshQueue();
+    }
+
+    async function shutdownNow(){
+      const data = await api("/session/shutdown_now", { method: "POST" });
+      setMsg("piMessage", data.ok === false ? (data.error || "İşlem başarısız") : "Hemen kapatma komutu gönderildi", data.ok !== false);
+      await refreshQueue();
+    }
+
+    async function refreshQueue(){
+      const data = await api("/queue");
+      el("queueBox").textContent = pretty(data.commands || []);
+    }
+
+    function buildPayloadPreview(){
+      const screen = el("contentScreenType").value;
+      const target = el("contentTargetWord").value.trim();
+      const interest = el("contentInterest").value.trim();
+      const gameType = el("contentGameType").value.trim();
+      const notes = el("contentNotes").value.trim();
+
+      const payload = screen === "speech_cards"
+        ? { screen, cards: target ? [target] : [] }
+        : { screen, game_type: gameType, target, interest, notes };
+
+      el("payloadPreview").textContent = pretty(payload);
+      return payload;
+    }
+
+    async function sendPreviewPayload(){
+      const payload = buildPayloadPreview();
+      let data;
+
+      if (payload.screen === "speech_cards"){
+        data = await api("/screen/speech_cards", {
+          method: "POST",
+          body: JSON.stringify(payload.cards)
+        });
+      } else {
+        data = await api("/screen/game", {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+      }
+
+      setMsg("contentMessage", data.ok === false ? (data.error || "Gönderilemedi") : "Payload Pi'ye gönderildi", data.ok !== false);
+      await refreshQueue();
+    }
+
+    async function saveDraft(){
+      const name = el("draftName").value.trim();
+      if (!name){
+        setMsg("contentMessage", "Taslak adı gerekli", false);
+        return;
+      }
+
+      const payload = buildPayloadPreview();
+      const data = await api("/draft/save", {
+        method: "POST",
+        body: JSON.stringify({ name, payload })
+      });
+
+      setMsg("contentMessage", data.error ? data.error : "Taslak kaydedildi", !data.error);
+      await loadDrafts();
+    }
+
+    async function loadDrafts(){
+      const data = await api("/drafts");
+      const items = data.drafts || [];
+      const root = el("draftList");
+
+      if (!items.length){
+        root.innerHTML = `<div class="small">Kayıtlı taslak yok</div>`;
+        return;
+      }
+
+      root.innerHTML = items.map(d => `
+        <div class="list-item">
+          <div><strong>${esc(d.name || "")}</strong></div>
+          <div class="small">${esc(d.updated_at || d.created_at || "")}</div>
+          <div class="actions" style="margin-top:8px;">
+            <button class="alt" onclick="openDraft('${esc(d.name || "")}')">Yükle</button>
+            <button class="danger" onclick="deleteDraft('${esc(d.name || "")}')">Sil</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function openDraft(name){
+      const data = await api(`/draft?name=${encodeURIComponent(name)}`);
+      if (data.error){
+        setMsg("contentMessage", data.error, false);
+        return;
+      }
+
+      const payload = data.payload || {};
+      el("draftName").value = data.name || name;
+      el("contentScreenType").value = payload.screen || "speech_cards";
+      el("contentTargetWord").value = payload.target || (payload.cards?.[0] || "");
+      el("contentInterest").value = payload.interest || "";
+      el("contentGameType").value = payload.game_type || "";
+      el("contentNotes").value = payload.notes || "";
+      el("payloadPreview").textContent = pretty(payload);
+      setMsg("contentMessage", "Taslak yüklendi", true);
+    }
+
+    async function deleteDraft(name){
+      const data = await api(`/draft/delete?name=${encodeURIComponent(name)}`, { method: "POST" });
+      setMsg("contentMessage", data.error ? data.error : "Taslak silindi", !data.error);
+      await loadDrafts();
+    }
+
+    async function loadServerStatus(){
+      const data = await api("/server/status");
+      el("serverStatusText").textContent = data.error ? "Sunucu hatası" : "Sunucu aktif";
+      el("serverStatusBox").textContent = pretty(data);
+      if (data.mode){
+        el("modeSelect").value = data.mode;
+      }
+    }
+
+    async function applyMode(){
+      const mode = el("modeSelect").value;
+      const data = await api(`/mode/set?mode=${encodeURIComponent(mode)}`, { method: "POST" });
+      setMsg("piMessage", data.error ? data.error : "Mod güncellendi", !data.error);
+      await loadServerStatus();
+    }
+
+    async function startAllServers(){
+      const data = await api("/server/start_all", { method: "POST" });
+      setMsg("piMessage", data.error ? data.error : "Sunucular başlatıldı", !data.error);
+      await loadServerStatus();
+    }
+
+    async function stopAllServers(){
+      const data = await api("/server/stop_all", { method: "POST" });
+      setMsg("piMessage", data.error ? data.error : "Sunucular durduruldu", !data.error);
+      await loadServerStatus();
+    }
+
+    async function stopAllServersSafe(){
+      const data = await api("/server/stop_all_safe", { method: "POST" });
+      setMsg("piMessage", data.error ? data.error : "Sunucular güvenli durduruldu", !data.error);
+      await loadServerStatus();
+    }
+
+    async function fakeSpeech(){
+      const data = await api("/dev/fake_speech", { method: "POST" });
+      setMsg("piMessage", data.error ? data.error : "Test verisi gönderildi", !data.error);
+      await loadAutonomyState();
+    }
+
+    async function startAutonomy(){
+      const data = await api("/autonomy/session/start", { method: "POST", body: JSON.stringify({}) });
+      setMsg("piMessage", data.error ? data.error : "Otonom seans başlatıldı", !data.error);
+      await loadAutonomyState();
+    }
+
+    async function tickAutonomy(){
+      const data = await api("/autonomy/session/tick?force=true", { method: "POST" });
+      setMsg("piMessage", data.error ? data.error : "Tick tamamlandı", !data.error);
+      await loadAutonomyState();
+      await refreshQueue();
+    }
+
+    async function stopAutonomy(){
+      const data = await api("/autonomy/session/stop?reason=manual_stop", { method: "POST" });
+      setMsg("piMessage", data.error ? data.error : "Otonom seans durduruldu", !data.error);
+      await loadAutonomyState();
+    }
+
+    async function loadAutonomyState(){
+      const data = await api("/autonomy/session/state");
+      el("autonomyStateBox").textContent = pretty(data);
+    }
+
+    async function init(){
+      const assetActions = document.querySelector("#assetTab .actions");
+      if (assetActions && !document.getElementById("saveEditedBtn")){
+        const btn = document.createElement("button");
+        btn.id = "saveEditedBtn";
+        btn.className = "alt";
+        btn.textContent = "Seçili Asseti Güncelle";
+        btn.onclick = saveEditedAsset;
+        assetActions.appendChild(btn);
+      }
+
+      await loadServerStatus();
+      await loadAssetStats();
+      await loadAssetHistory();
+      await loadAssets();
+      await refreshQueue();
+      await loadDrafts();
+      await loadAutonomyState();
+      buildPayloadPreview();
+    }
+
+    init();
   </script>
 </body>
 </html>
