@@ -1,0 +1,15 @@
+{
+  "enabled": false,
+  "mode": "semi_auto",
+  "intervention_level": 0.5,
+  "max_repeat": 2,
+  "interest_bias": 0.7,
+  "novelty_bias": 0.5,
+  "difficulty_ramp": 0.15,
+  "session_duration_min": 20,
+  "tick_interval_sec": 20,
+  "fallback_interest": "oyuncak",
+  "recovery_strategy": "simplify",
+  "default_screen": "speech_cards",
+  "preload_next": true
+}
