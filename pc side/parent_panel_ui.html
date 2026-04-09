@@ -3,1883 +3,642 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ebeveyn Kontrol Dashboard</title>
+  <title>Pi Tablet Parent Panel</title>
   <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: #e5e7eb;
-      margin: 0;
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #202531;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --accent: #2563eb;
+      --accent-soft: #dbeafe;
+      --danger: #dc2626;
+      --success: #059669;
+      --shadow: 0 10px 25px rgba(0,0,0,0.06);
+      --radius: 18px;
     }
-    .wrap {
-      max-width: 1520px;
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .page {
+      max-width: 1300px;
       margin: 0 auto;
       padding: 24px;
     }
-    .hero, .card {
-      background: #111827;
-      border: 1px solid #1f2937;
-      border-radius: 20px;
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
     }
-    .hero {
-      padding: 24px;
-      margin-bottom: 20px;
+
+    .title-wrap h1 {
+      margin: 0 0 6px 0;
+      font-size: 28px;
     }
-    .hero h1 { margin: 0 0 8px 0; }
+
+    .title-wrap p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .status-pill {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .card h2 {
+      margin-top: 0;
+      margin-bottom: 18px;
+      font-size: 20px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    label {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    input[type="text"],
+    textarea,
+    input[type="file"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .thumb-preview-panel {
+      margin-top: 8px;
+    }
+
+    .thumb-title {
+      font-weight: 700;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .thumb-box {
+      width: 100%;
+      max-width: 260px;
+      height: 260px;
+      border: 2px dashed #c7ced8;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #fafafa;
+    }
+
+    #assetThumbPreview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    #assetThumbPlaceholder {
+      color: var(--muted);
+      font-size: 14px;
+      text-align: center;
+      padding: 16px;
+    }
+
+    .form-actions {
+      margin-top: 18px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+    }
+
+    button.secondary {
+      background: #eef2ff;
+      color: #3730a3;
+    }
+
+    button.danger {
+      background: #fee2e2;
+      color: var(--danger);
+    }
+
     .stats {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-top: 16px;
-    }
-    .stat {
-      background: #1f2937;
-      padding: 16px;
-      border-radius: 16px;
-    }
-    .stat b {
-      display: block;
-      margin-bottom: 6px;
-    }
-    .tabs {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 8px;
-      margin-bottom: 20px;
-    }
-    .tab {
-      padding: 12px;
-      border: none;
-      border-radius: 14px;
-      background: #1f2937;
-      color: #fff;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .tab.active { background: #374151; }
-    .panel { display: none; }
-    .panel.active { display: block; }
-    .grid {
-      display: grid;
-      gap: 16px;
-    }
-    .grid-2 { grid-template-columns: 2fr 1fr; }
-    .grid-3 { grid-template-columns: repeat(3, 1fr); }
-    .studio-grid {
-      display: grid;
-      grid-template-columns: 1.3fr 1fr;
-      gap: 16px;
-    }
-    .card { padding: 20px; }
-    h2, h3 { margin-top: 0; }
-    input, select, textarea {
-      width: 100%;
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid #374151;
-      background: #0b1220;
-      color: #fff;
-      margin-top: 8px;
-    }
-    input[type="checkbox"] {
-      width: auto;
-      margin-right: 8px;
-      transform: scale(1.2);
-    }
-    input[type="file"] { padding: 10px; }
-    textarea {
-      min-height: 110px;
-      resize: vertical;
-    }
-    button.action {
-      padding: 12px 16px;
-      border: none;
-      border-radius: 12px;
-      background: #2563eb;
-      color: #fff;
-      cursor: pointer;
-      margin-top: 10px;
-      margin-right: 8px;
-    }
-    button.secondary { background: #374151; }
-    button.danger { background: #dc2626; }
-    .queue-item,
-    .milestone,
-    .phrase,
-    .status-box,
-    .payload-box,
-    .asset-card,
-    .history-item {
-      border: 1px solid #374151;
-      border-radius: 14px;
-      padding: 12px;
-      margin-top: 10px;
-    }
-    .progress {
-      height: 10px;
-      background: #1f2937;
-      border-radius: 999px;
-      overflow: hidden;
-      margin-top: 8px;
-    }
-    .bar {
-      height: 100%;
-      background: #60a5fa;
-      width: 0%;
-      transition: width 0.3s ease;
-    }
-    .muted {
-      color: #9ca3af;
-      font-size: 14px;
-    }
-    .row {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: center;
-    }
-    .section-gap { margin-top: 16px; }
-    .ok { color: #86efac; }
-    .warn { color: #fcd34d; }
-    .err { color: #fca5a5; }
-
-    .preview-shell {
-      background: #0b1220;
-      border: 1px solid #374151;
-      border-radius: 20px;
-      padding: 18px;
-    }
-    .preview-caption {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      font-size: 13px;
-      color: #9ca3af;
-    }
-    .pi-preview {
-      width: 100%;
-      aspect-ratio: 800 / 480;
-      background: #0f172a;
-      border: 2px solid #334155;
-      border-radius: 22px;
-      overflow: hidden;
-      position: relative;
-      box-shadow: inset 0 0 0 1px #1e293b;
-    }
-    .pi-topbar {
-      height: 58px;
-      background: #111827;
-      border-bottom: 1px solid #1f2937;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 18px;
-    }
-    .pi-title {
-      font-size: 20px;
-      font-weight: bold;
-      color: #ffffff;
-    }
-    .pi-status {
-      font-size: 12px;
-      color: #9ca3af;
-      text-align: right;
-    }
-    .pi-body {
-      padding: 18px;
-      height: calc(100% - 58px);
-      overflow: hidden;
-    }
-    .preview-card-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
       gap: 14px;
+      margin-bottom: 18px;
     }
-    .preview-card {
-      background: #1f2937;
-      border: 2px solid #3b82f6;
-      border-radius: 18px;
-      min-height: 92px;
+
+    .stat-box {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-box .k {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .stat-box .v {
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .assets-header {
       display: flex;
       align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 12px;
-      font-size: 22px;
-      font-weight: bold;
-      color: white;
-    }
-    .preview-empty {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      color: #94a3b8;
-      text-align: center;
-      padding: 20px;
-      font-size: 18px;
-    }
-    .preview-game {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      color: #fff;
-    }
-    .preview-game-box {
-      background: #1f2937;
-      border: 1px solid #374151;
-      border-radius: 18px;
-      padding: 18px;
-      min-height: 100px;
-    }
-    .payload-box pre {
-      margin: 0;
-      white-space: pre-wrap;
-      word-break: break-word;
-      font-size: 12px;
-      color: #cbd5e1;
-      font-family: Consolas, monospace;
-    }
-    .small-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      justify-content: space-between;
+      margin-bottom: 14px;
       gap: 12px;
+      flex-wrap: wrap;
     }
-    .triple-grid {
+
+    .assets-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-      font-size: 14px;
-      color: #cbd5e1;
-    }
-    .asset-grid {
-      display: grid;
-      grid-template-columns: 1.15fr 1fr;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
       gap: 16px;
     }
-    .asset-preview-box {
-      border: 1px solid #374151;
-      border-radius: 14px;
-      background: #0b1220;
-      min-height: 280px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      margin-top: 12px;
-      padding: 12px;
-    }
-    .asset-preview-box img {
-      max-width: 100%;
-      max-height: 420px;
-      border-radius: 14px;
-    }
-    .asset-list {
-      max-height: 620px;
-      overflow: auto;
-      padding-right: 4px;
-    }
+
     .asset-card {
-      background: #0b1220;
-      cursor: pointer;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
     }
-    .asset-card.active {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 1px #3b82f6 inset;
-    }
+
     .asset-thumb {
       width: 100%;
-      max-height: 180px;
-      object-fit: contain;
-      background: #0f172a;
-      border-radius: 12px;
-      border: 1px solid #374151;
-      margin-top: 10px;
-    }
-    .badge {
-      display: inline-block;
-      border-radius: 999px;
-      background: #1f2937;
-      border: 1px solid #374151;
-      padding: 4px 8px;
-      font-size: 12px;
-      margin-right: 6px;
-      margin-top: 6px;
-      color: #cbd5e1;
-    }
-    .checkbox-line {
-      display: flex;
-      align-items: center;
-      margin-top: 14px;
-    }
-    .divider {
-      height: 1px;
-      background: #1f2937;
-      margin: 20px 0;
+      height: 180px;
+      object-fit: cover;
+      display: block;
+      background: #f3f4f6;
     }
 
-    @media (max-width: 1200px) {
-      .stats,
-      .tabs,
-      .grid-2,
-      .grid-3,
-      .studio-grid,
-      .asset-grid {
+    .asset-content {
+      padding: 14px;
+    }
+
+    .asset-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 0 0 8px 0;
+    }
+
+    .asset-meta {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 8px 0 10px 0;
+    }
+
+    .tag {
+      background: #f3f4f6;
+      color: #374151;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    .asset-notes {
+      font-size: 14px;
+      color: #374151;
+      min-height: 36px;
+      margin-bottom: 12px;
+    }
+
+    .asset-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .message {
+      margin-top: 12px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .message.ok {
+      color: var(--success);
+    }
+
+    .message.err {
+      color: var(--danger);
+    }
+
+    @media (max-width: 980px) {
+      .grid {
         grid-template-columns: 1fr;
       }
-      .preview-card-grid {
+
+      .stats {
         grid-template-columns: repeat(2, 1fr);
       }
     }
 
-    @media (max-width: 700px) {
-      .preview-card-grid,
-      .small-grid,
-      .triple-grid {
+    @media (max-width: 560px) {
+      .stats {
         grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="hero">
-    <h1>🧠 Ebeveyn Denetim ve Gelişim Paneli <span id="modeBadge" class="muted"></span></h1>
-    <p>Pi ekranını canlı yönet, AI içerik üret, milestone ve çift dilli asset havuzunu tek yerden kontrol et.</p>
+  <div class="page">
+    <div class="topbar">
+      <div class="title-wrap">
+        <h1>Pi Tablet Parent Panel</h1>
+        <p>Manuel asset oluşturma ve thumbnail önizleme paneli</p>
+      </div>
+      <div id="serverStatus" class="status-pill">Server kontrol ediliyor...</div>
+    </div>
 
     <div class="stats">
-      <div class="stat">
-        <b>Dikkat</b>
-        <div id="statAttention">Yükleniyor...</div>
+      <div class="stat-box">
+        <div class="k">Toplam Asset</div>
+        <div class="v" id="statAssetCount">0</div>
       </div>
-      <div class="stat">
-        <b>Konuşma</b>
-        <div id="statSpeech">Yükleniyor...</div>
+      <div class="stat-box">
+        <div class="k">Preferred</div>
+        <div class="v" id="statPreferredCount">0</div>
       </div>
-      <div class="stat">
-        <b>Yeni Kelime</b>
-        <div id="statNewWords">Yükleniyor...</div>
+      <div class="stat-box">
+        <div class="k">Toplam Usage</div>
+        <div class="v" id="statUsageCount">0</div>
       </div>
-      <div class="stat">
-        <b>2'li İfade</b>
-        <div id="statTwoWord">Yükleniyor...</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="tabs">
-    <button class="tab active" onclick="showTab('control', this)">Canlı Kontrol</button>
-    <button class="tab" onclick="showTab('dashboard', this)">Dashboard</button>
-    <button class="tab" onclick="showTab('milestones', this)">Kelime</button>
-    <button class="tab" onclick="showTab('studio', this)">İçerik</button>
-    <button class="tab" onclick="showTab('assetsTab', this)">Asset Stüdyosu</button>
-    <button class="tab" onclick="showTab('device', this)">Pi</button>
-  </div>
-
-  <div id="control" class="panel active">
-    <div class="grid grid-2">
-      <div class="card">
-        <h2>Canlı Kontrol</h2>
-
-        <label>Konuşma Kartları</label>
-        <input id="words" placeholder="top, araba, dinozor" oninput="updatePreviewFromCards()" />
-
-        <button class="action" onclick="sendSpeechCards()">Pi'ye Gönder</button>
-        <button class="action secondary" onclick="appendAiContent()">Dinamik İçerik</button>
-
-        <div id="commandResult" class="status-box muted">Henüz komut gönderilmedi.</div>
-      </div>
-
-      <div class="card">
-        <h2>Komut Kuyruğu</h2>
-        <button class="action secondary" onclick="loadQueue()">Yenile</button>
-        <div id="queue"></div>
-      </div>
-    </div>
-  </div>
-
-  <div id="dashboard" class="panel">
-    <div class="grid grid-3">
-      <div class="card">
-        <h3>Dikkat Eğrisi</h3>
-        <div class="progress"><div id="attentionBar" class="bar"></div></div>
-        <div id="attentionText" class="muted">Veri bekleniyor</div>
-      </div>
-
-      <div class="card">
-        <h3>Kelime Tamamlama</h3>
-        <div class="progress"><div id="wordBar" class="bar"></div></div>
-        <div id="wordText" class="muted">Veri bekleniyor</div>
-      </div>
-
-      <div class="card">
-        <h3>2'li İfade</h3>
-        <div class="progress"><div id="twoWordBar" class="bar"></div></div>
-        <div id="twoWordText" class="muted">Veri bekleniyor</div>
+      <div class="stat-box">
+        <div class="k">Toplam Success</div>
+        <div class="v" id="statSuccessCount">0</div>
       </div>
     </div>
 
-    <div class="card section-gap">
-      <h3>Terapötik Öncelikler</h3>
-      <div id="priorities" class="muted">Veri bekleniyor</div>
-    </div>
-  </div>
-
-  <div id="milestones" class="panel">
-    <div class="card">
-      <h2>Kelime Gelişimi</h2>
-      <div id="milestoneList" class="muted">Milestone verisi bekleniyor</div>
-
-      <h3 style="margin-top: 20px;">2'li İfadeler</h3>
-      <div id="phraseList" class="muted">2'li ifade verisi bekleniyor</div>
-    </div>
-  </div>
-
-  <div id="studio" class="panel">
-    <div class="studio-grid">
+    <div class="grid">
       <div class="card">
-        <h2>AI İçerik Stüdyosu</h2>
+        <h2>Manuel Asset Oluştur</h2>
 
-        <label>Taslak Adı</label>
-        <input id="draftName" placeholder="örn: Dinozor Kartları 1" />
-
-        <div class="small-grid">
-          <button class="action secondary" onclick="saveDraft()">Taslağı Kaydet</button>
-          <button class="action secondary" onclick="loadDrafts()">Taslakları Yenile</button>
-        </div>
-
-        <label>Kayıtlı Taslaklar</label>
-        <select id="draftList"></select>
-
-        <div class="small-grid">
-          <button class="action secondary" onclick="loadSelectedDraft()">Taslağı Yükle</button>
-          <button class="action danger" onclick="deleteSelectedDraft()">Taslağı Sil</button>
-        </div>
-
-        <label>Önizleme Ekran Tipi</label>
-        <select id="previewScreenType" onchange="updatePreviewFromStudio()">
-          <option value="speech_cards">Konuşma Kartları</option>
-          <option value="interactive_game">Görsel Oyun</option>
-        </select>
-
-        <label>Hedef Kelime</label>
-        <input id="target" placeholder="Hedef kelime" oninput="updatePreviewFromStudio()" />
-
-        <label>İlgi Alanı</label>
-        <input id="interest" placeholder="İlgi alanı" oninput="updatePreviewFromStudio()" />
-
-        <label>Oyun Tipi</label>
-        <input id="gameType" placeholder="match_objects" oninput="updatePreviewFromStudio()" />
-
-        <label>Terapi / İçerik Notları</label>
-        <textarea id="notes" placeholder="Hedefler, zorlanılan alanlar, terapi notları" oninput="updatePreviewFromStudio()"></textarea>
-
-        <div class="small-grid">
-          <button class="action" onclick="appendAiContent()">Üret ve Pi'ye Gönder</button>
-          <button class="action secondary" onclick="resetPreview()">Önizlemeyi Sıfırla</button>
-        </div>
-
-        <div class="payload-box">
-          <b>Gönderilecek Payload</b>
-          <pre id="previewPayload">{}</pre>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Pi Ekran Önizlemesi</h2>
-
-        <div class="preview-shell">
-          <div class="preview-caption">
-            <span>800 × 480 oranlı canlı taslak</span>
-            <span id="previewModeBadge">Taslak</span>
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="assetLabel">Asset Adı</label>
+            <input id="assetLabel" type="text" placeholder="örn: top">
           </div>
 
-          <div class="pi-preview">
-            <div class="pi-topbar">
-              <div class="pi-title" id="previewTitle">Pi Tablet Hazır</div>
-              <div class="pi-status" id="previewStatus">Henüz içerik oluşturulmadı</div>
+          <div class="form-row">
+            <label for="assetTags">Etiketler</label>
+            <input id="assetTags" type="text" placeholder="örn: oyuncak, yuvarlak">
+          </div>
+
+          <div class="form-row">
+            <label for="assetInterests">İlgi Alanları</label>
+            <input id="assetInterests" type="text" placeholder="örn: top, oyun">
+          </div>
+
+          <div class="form-row">
+            <label for="assetNotes">Notlar</label>
+            <textarea id="assetNotes" placeholder="örn: kırmızı plastik top"></textarea>
+          </div>
+
+          <div class="form-row">
+            <label for="assetImageFile">Görsel Seç</label>
+            <input id="assetImageFile" type="file" accept="image/*">
+          </div>
+
+          <div class="form-row checkbox-row">
+            <input id="assetPreferred" type="checkbox">
+            <label for="assetPreferred" style="margin:0;">Preferred olarak işaretle</label>
+          </div>
+        </div>
+
+        <div class="thumb-preview-panel">
+          <div class="thumb-title">Thumbnail Önizleme</div>
+          <div class="thumb-box">
+            <img id="assetThumbPreview" src="" alt="thumb">
+            <div id="assetThumbPlaceholder">Henüz görsel seçilmedi</div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button onclick="createManualAsset()">Asset Oluştur</button>
+          <button class="secondary" onclick="resetAssetForm()">Formu Temizle</button>
+        </div>
+
+        <div id="formMessage" class="message"></div>
+      </div>
+
+      <div class="card">
+        <div class="assets-header">
+          <h2 style="margin:0;">Asset Kütüphanesi</h2>
+          <button class="secondary" onclick="refreshAll()">Yenile</button>
+        </div>
+        <div id="assetsGrid" class="assets-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const assetImageInput = document.getElementById("assetImageFile");
+    const thumbPreview = document.getElementById("assetThumbPreview");
+    const thumbPlaceholder = document.getElementById("assetThumbPlaceholder");
+    const formMessage = document.getElementById("formMessage");
+
+    function setMessage(text, ok = true) {
+      formMessage.textContent = text || "";
+      formMessage.className = ok ? "message ok" : "message err";
+    }
+
+    function escapeHtml(text) {
+      return String(text || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function renderTags(items) {
+      if (!items || !items.length) return "";
+      return items.map(x => `<span class="tag">${escapeHtml(x)}</span>`).join("");
+    }
+
+    function resetAssetForm() {
+      document.getElementById("assetLabel").value = "";
+      document.getElementById("assetTags").value = "";
+      document.getElementById("assetInterests").value = "";
+      document.getElementById("assetNotes").value = "";
+      document.getElementById("assetPreferred").checked = false;
+      document.getElementById("assetImageFile").value = "";
+
+      thumbPreview.style.display = "none";
+      thumbPreview.src = "";
+      thumbPlaceholder.style.display = "block";
+
+      setMessage("");
+    }
+
+    if (assetImageInput) {
+      assetImageInput.addEventListener("change", function () {
+        const file = this.files && this.files[0];
+
+        if (!file) {
+          thumbPreview.style.display = "none";
+          thumbPreview.src = "";
+          thumbPlaceholder.style.display = "block";
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          thumbPreview.src = e.target.result;
+          thumbPreview.style.display = "block";
+          thumbPlaceholder.style.display = "none";
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function loadServerStatus() {
+      try {
+        const res = await fetch("/server/status");
+        const data = await res.json();
+
+        if (data.ok) {
+          document.getElementById("serverStatus").textContent = `Server aktif • ${data.asset_count} asset`;
+        } else {
+          document.getElementById("serverStatus").textContent = "Server hatası";
+        }
+      } catch (err) {
+        document.getElementById("serverStatus").textContent = "Server erişilemedi";
+      }
+    }
+
+    async function loadStats() {
+      try {
+        const res = await fetch("/assets/stats");
+        const data = await res.json();
+
+        if (!data.ok) return;
+
+        document.getElementById("statAssetCount").textContent = data.asset_count ?? 0;
+        document.getElementById("statPreferredCount").textContent = data.preferred_count ?? 0;
+        document.getElementById("statUsageCount").textContent = data.total_usage ?? 0;
+        document.getElementById("statSuccessCount").textContent = data.total_success ?? 0;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function loadAssets() {
+      const grid = document.getElementById("assetsGrid");
+      grid.innerHTML = `<div class="muted">Yükleniyor...</div>`;
+
+      try {
+        const res = await fetch("/assets/list");
+        const data = await res.json();
+
+        if (!data.ok) {
+          grid.innerHTML = `<div class="muted">Asset listesi alınamadı</div>`;
+          return;
+        }
+
+        const items = data.items || [];
+        if (!items.length) {
+          grid.innerHTML = `<div class="muted">Henüz asset yok</div>`;
+          return;
+        }
+
+        grid.innerHTML = items.map(item => {
+          const tags = renderTags(item.tags || []);
+          const interests = renderTags(item.interests || []);
+          const notes = escapeHtml(item.notes || "");
+          const label = escapeHtml(item.label || "");
+          const thumb = escapeHtml(item.thumb_path || "");
+          const assetId = escapeHtml(item.asset_id || "");
+          const preferred = item.preferred ? `<span class="tag">preferred</span>` : "";
+
+          return `
+            <div class="asset-card">
+              <img class="asset-thumb" src="${thumb}" alt="${label}">
+              <div class="asset-content">
+                <div class="asset-title">${label}</div>
+                <div class="asset-meta">ID: ${assetId}</div>
+                <div class="tag-list">${preferred}</div>
+                <div class="tag-list">${tags}</div>
+                <div class="tag-list">${interests}</div>
+                <div class="asset-notes">${notes || "Not yok"}</div>
+                <div class="asset-meta">Usage: ${item.usage_count || 0} • Success: ${item.success_count || 0} • Fail: ${item.fail_count || 0}</div>
+                <div class="asset-actions">
+                  <button class="danger" onclick="deleteAsset('${assetId}')">Sil</button>
+                </div>
+              </div>
             </div>
-
-            <div class="pi-body" id="previewBody">
-              <div class="preview-empty">İçerik stüdyosunda seçim yapıldığında burada Pi ekran önizlemesi görünür.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="assetsTab" class="panel">
-    <div class="asset-grid">
-      <div class="card">
-        <h2>Asset Oluşturucu</h2>
-
-        <label>Görsel Seç</label>
-        <input id="assetFile" type="file" accept="image/*" onchange="handleAssetFileChange(event)" />
-
-        <div class="asset-preview-box" id="assetPreviewBox">
-          <div class="preview-empty">Seçilen görsel burada önizlenecek.</div>
-        </div>
-
-        <label>Türkçe Label</label>
-        <input id="assetLabelTr" placeholder="örn: top" oninput="lookupTrToEn(this.value)" />
-
-        <label>İngilizce Label</label>
-        <input id="assetLabelEn" placeholder="örn: ball" />
-
-        <label>Çeviri Adayları</label>
-        <select id="assetTranslationCandidates" onchange="applySelectedTranslation()">
-          <option value="">Aday yok</option>
-        </select>
-
-        <div id="translationSuggest" class="status-box muted">Türkçe label girildiğinde İngilizce karşılık önerilir.</div>
-
-        <label>Türkçe Tagler</label>
-        <input id="assetTagsTr" placeholder="örn: top, oyuncak" />
-
-        <label>İngilizce Tagler</label>
-        <input id="assetTagsEn" placeholder="örn: ball, toy" />
-
-        <label>Türkçe Interests</label>
-        <input id="assetInterestsTr" placeholder="örn: oyuncak, top" />
-
-        <label>İngilizce Interests</label>
-        <input id="assetInterestsEn" placeholder="örn: toy, ball" />
-
-        <label>Source</label>
-        <select id="assetSource">
-          <option value="manual">manual</option>
-          <option value="fiftyone_open_images">fiftyone_open_images</option>
-          <option value="generated">generated</option>
-        </select>
-
-        <label>Source Query Türkçe</label>
-        <input id="assetSourceQueryTr" placeholder="örn: top" />
-
-        <label>Source Query İngilizce</label>
-        <input id="assetSourceQueryEn" placeholder="örn: ball" />
-
-        <label>Source URL</label>
-        <input id="assetSourceUrl" placeholder="opsiyonel" />
-
-        <div class="checkbox-line">
-          <input id="assetPreferred" type="checkbox" />
-          <label for="assetPreferred" style="margin-top:0;">Preferred</label>
-        </div>
-
-        <label>Notlar</label>
-        <textarea id="assetNotes" placeholder="Asset notları"></textarea>
-
-        <div class="small-grid">
-          <button class="action" onclick="createAsset()">Asset Kaydet</button>
-          <button class="action secondary" onclick="resetAssetForm()">Formu Temizle</button>
-        </div>
-
-        <div id="assetCreateResult" class="status-box muted">Henüz asset kaydedilmedi.</div>
-
-        <div class="divider"></div>
-
-        <h2>FiftyOne / Open Images İçe Aktarma</h2>
-
-        <label>Türkçe Arama</label>
-        <input id="foQueryTr" placeholder="örn: top, araba, dinozor" oninput="lookupFoTrToEn(this.value)" />
-
-        <label>İngilizce Arama Karşılığı</label>
-        <input id="foQueryEn" placeholder="otomatik öneri" />
-
-        <div id="foTranslationSuggest" class="status-box muted">Türkçe arama girildiğinde İngilizce karşılık önerilir.</div>
-
-        <div class="small-grid">
-          <div>
-            <label>Adet</label>
-            <input id="foMaxSamples" type="number" value="5" min="1" max="20" />
-          </div>
-          <div>
-            <label>Split</label>
-            <select id="foSplit">
-              <option value="validation">validation</option>
-              <option value="test">test</option>
-              <option value="train">train</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="checkbox-line">
-          <input id="foPreferred" type="checkbox" />
-          <label for="foPreferred" style="margin-top:0;">İçe alınanları preferred yap</label>
-        </div>
-
-        <label>Not</label>
-        <textarea id="foNotes" placeholder="İçe aktarma notu"></textarea>
-
-        <button class="action" onclick="runFiftyOneImport()">FiftyOne ile İçe Al</button>
-
-        <div id="foImportResult" class="status-box muted">Henüz FiftyOne import yapılmadı.</div>
-
-        <div class="divider"></div>
-
-        <button class="action secondary" onclick="migrateManifest()">Manifesti Yeni Formata Taşı</button>
-        <div id="manifestMigrateResult" class="status-box muted">Gerekirse eski manifest kayıtlarını yeni çift dilli formata taşır.</div>
-
-        <h3 style="margin-top:24px;">Asset İstatistikleri</h3>
-        <div id="assetStats" class="muted">İstatistik bekleniyor</div>
-      </div>
-
-      <div class="card">
-        <h2>Manifest Tarayıcı</h2>
-
-        <div class="triple-grid">
-          <div>
-            <label>Arama</label>
-            <input id="assetSearchQ" placeholder="label, tag, source..." />
-          </div>
-          <div>
-            <label>Status</label>
-            <select id="assetFilterStatus">
-              <option value="">Tümü</option>
-              <option value="active">active</option>
-              <option value="archived">archived</option>
-            </select>
-          </div>
-          <div style="display:flex;align-items:flex-end;">
-            <button class="action secondary" onclick="loadAssets()" style="width:100%;">Listele</button>
-          </div>
-        </div>
-
-        <div class="asset-list" id="assetList">Asset listesi bekleniyor...</div>
-
-        <h3 style="margin-top:20px;">Seçili Asset Düzenle</h3>
-
-        <label>Asset ID</label>
-        <input id="editAssetId" readonly />
-
-        <label>Türkçe Label</label>
-        <input id="editAssetLabelTr" />
-
-        <label>İngilizce Label</label>
-        <input id="editAssetLabelEn" />
-
-        <label>Türkçe Tags</label>
-        <input id="editAssetTagsTr" />
-
-        <label>İngilizce Tags</label>
-        <input id="editAssetTagsEn" />
-
-        <label>Türkçe Interests</label>
-        <input id="editAssetInterestsTr" />
-
-        <label>İngilizce Interests</label>
-        <input id="editAssetInterestsEn" />
-
-        <label>Source</label>
-        <input id="editAssetSource" />
-
-        <label>Source Query Türkçe</label>
-        <input id="editAssetSourceQueryTr" />
-
-        <label>Source Query İngilizce</label>
-        <input id="editAssetSourceQueryEn" />
-
-        <label>Source URL</label>
-        <input id="editAssetSourceUrl" />
-
-        <label>Status</label>
-        <select id="editAssetStatus">
-          <option value="active">active</option>
-          <option value="archived">archived</option>
-        </select>
-
-        <div class="checkbox-line">
-          <input id="editAssetPreferred" type="checkbox" />
-          <label for="editAssetPreferred" style="margin-top:0;">Preferred</label>
-        </div>
-
-        <label>Notlar</label>
-        <textarea id="editAssetNotes"></textarea>
-
-        <div class="small-grid">
-          <button class="action" onclick="updateSelectedAsset()">Değişiklikleri Kaydet</button>
-          <button class="action secondary" onclick="loadAssetHistory()">Geçmişi Yenile</button>
-        </div>
-
-        <div id="assetEditResult" class="status-box muted">Seçili asset yok.</div>
-
-        <h3 style="margin-top:20px;">Asset Geçmişi</h3>
-        <div id="assetHistory" class="muted">Geçmiş bekleniyor</div>
-      </div>
-    </div>
-  </div>
-
-  <div id="device" class="panel">
-    <div class="grid grid-2">
-      <div class="card">
-        <h2>Pi Yönetimi</h2>
-
-        <input id="minutes" type="number" value="15" />
-        <button class="action" onclick="shutdownLater()">Süreli Kapat</button>
-        <button class="action danger" onclick="shutdownNow()">Hemen Kapat</button>
-      </div>
-
-      <div class="card">
-        <h2>Sunucu Kontrol Merkezi</h2>
-
-        <div class="queue-item">
-          <b>Çalışma Modu</b><br>
-          <span id="activeMode">yükleniyor</span>
-
-          <select id="modeSelect">
-            <option value="prod">PROD</option>
-            <option value="test">TEST</option>
-          </select>
-
-          <button class="action secondary" onclick="setMode()">Modu Uygula</button>
-          <button class="action secondary" onclick="injectFakeSpeech()">Test Verisi Üret</button>
-        </div>
-
-        <div class="queue-item">
-          <b>Parent Panel</b><br>
-          <span id="panelStatus">Durum bilinmiyor</span>
-        </div>
-
-        <div class="queue-item">
-          <b>Tool Server</b><br>
-          <span id="toolStatus">Durum bilinmiyor</span>
-        </div>
-
-        <div class="queue-item">
-          <b>Middleware</b><br>
-          <span id="middlewareStatus">Durum bilinmiyor</span>
-        </div>
-
-        <div class="queue-item">
-          <b>Dashboard</b><br>
-          <span id="dashboardStatus">Durum bilinmiyor</span>
-        </div>
-
-        <div class="queue-item">
-          <b>FiftyOne</b><br>
-          <span id="fiftyoneStatus">Durum bilinmiyor</span>
-        </div>
-
-        <button class="action" onclick="startServer('tool')">Tool Server Başlat</button>
-        <button class="action" onclick="startServer('middleware')">Middleware Başlat</button>
-        <button class="action" onclick="startServer('dashboard')">Dashboard Başlat</button>
-        <button class="action secondary" onclick="startAllServers()">Hepsini Başlat</button>
-        <button class="action secondary" onclick="stopAllServersSafe()">Diğerlerini Durdur</button>
-        <button class="action danger" onclick="stopAllServers()">Tam Kapat</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-const API = '';
-
-let previewState = {
-  screen: 'idle',
-  cards: [],
-  game_type: '',
-  target_word: '',
-  interest: '',
-  notes: '',
-  status: 'Henüz içerik oluşturulmadı'
-};
-
-let assetFormImageBase64 = '';
-let selectedAssetId = '';
-let assetCache = {};
-
-function showTab(id, btn) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  btn.classList.add('active');
-}
-
-function setResult(text, cls = 'muted') {
-  const el = document.getElementById('commandResult');
-  if (!el) return;
-  el.className = 'status-box ' + cls;
-  el.textContent = text;
-}
-
-function setText(id, value) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = value;
-}
-
-function setProgress(id, value) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const safe = Math.max(0, Math.min(100, Number(value) || 0));
-  el.style.width = safe + '%';
-}
-
-function asPercent(v) {
-  const n = Number(v);
-  if (Number.isNaN(n)) return 'Veri yok';
-  return '%' + Math.round(n * 100);
-}
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
-}
-
-function renderTags(values) {
-  if (!values || !values.length) return '';
-  return values.map(v => `<span class="badge">${escapeHtml(v)}</span>`).join('');
-}
-
-function collectDraftPayload() {
-  const previewScreenType = document.getElementById('previewScreenType')?.value || 'speech_cards';
-  const target = document.getElementById('target')?.value || '';
-  const interest = document.getElementById('interest')?.value || '';
-  const gameType = document.getElementById('gameType')?.value || 'interactive_game';
-  const notes = document.getElementById('notes')?.value || '';
-  const words = document.getElementById('words')?.value || '';
-
-  return {
-    previewScreenType,
-    target,
-    interest,
-    gameType,
-    notes,
-    words
-  };
-}
-
-function applyDraftPayload(payload) {
-  const mapping = {
-    previewScreenType: 'previewScreenType',
-    target: 'target',
-    interest: 'interest',
-    gameType: 'gameType',
-    notes: 'notes',
-    words: 'words'
-  };
-
-  Object.keys(mapping).forEach(key => {
-    const el = document.getElementById(mapping[key]);
-    if (el && payload[key] !== undefined) {
-      el.value = payload[key];
-    }
-  });
-
-  updatePreviewFromCards();
-  updatePreviewFromStudio();
-}
-
-function renderPreview() {
-  const titleEl = document.getElementById('previewTitle');
-  const statusEl = document.getElementById('previewStatus');
-  const bodyEl = document.getElementById('previewBody');
-  const payloadEl = document.getElementById('previewPayload');
-
-  if (!titleEl || !statusEl || !bodyEl || !payloadEl) return;
-
-  if (previewState.screen === 'speech_cards') {
-    titleEl.textContent = 'Konuşma Kartları';
-    statusEl.textContent = previewState.status || 'Konuşma kartları önizleniyor';
-
-    const cards = previewState.cards || [];
-
-    if (!cards.length) {
-      bodyEl.innerHTML = `<div class="preview-empty">Kart eklenmedi. Sol alandan kelime girerek önizlemeyi oluştur.</div>`;
-    } else {
-      bodyEl.innerHTML = `
-        <div class="preview-card-grid">
-          ${cards.slice(0, 6).map(card => `
-            <div class="preview-card">${escapeHtml(card)}</div>
-          `).join('')}
-        </div>
-      `;
-    }
-  } else if (previewState.screen === 'interactive_game') {
-    titleEl.textContent = 'Görsel Oyun';
-    statusEl.textContent = previewState.status || 'Oyun ekranı önizleniyor';
-
-    bodyEl.innerHTML = `
-      <div class="preview-game">
-        <div class="preview-game-box">
-          <b>Oyun Tipi:</b> ${escapeHtml(previewState.game_type || 'interactive_game')}
-        </div>
-        <div class="preview-game-box">
-          <b>Hedef Kelime:</b> ${escapeHtml(previewState.target_word || '-')}
-        </div>
-        <div class="preview-game-box">
-          <b>İlgi Alanı:</b> ${escapeHtml(previewState.interest || '-')}
-        </div>
-      </div>
-    `;
-  } else {
-    titleEl.textContent = 'Pi Tablet Hazır';
-    statusEl.textContent = previewState.status || 'Henüz içerik oluşturulmadı';
-    bodyEl.innerHTML = `<div class="preview-empty">İçerik stüdyosunda seçim yapıldığında burada Pi ekran önizlemesi görünür.</div>`;
-  }
-
-  payloadEl.textContent = JSON.stringify(previewState, null, 2);
-}
-
-function updatePreviewFromCards() {
-  const input = document.getElementById('words');
-  const cards = (input?.value || '')
-    .split(',')
-    .map(x => x.trim())
-    .filter(Boolean);
-
-  previewState = {
-    screen: 'speech_cards',
-    cards,
-    game_type: '',
-    target_word: '',
-    interest: '',
-    notes: '',
-    status: 'Canlı kontrol kart önizlemesi'
-  };
-
-  renderPreview();
-}
-
-function updatePreviewFromStudio() {
-  const screenType = document.getElementById('previewScreenType')?.value || 'speech_cards';
-  const target = document.getElementById('target')?.value || '';
-  const interest = document.getElementById('interest')?.value || '';
-  const notes = document.getElementById('notes')?.value || '';
-  const gameType = document.getElementById('gameType')?.value || 'interactive_game';
-
-  if (screenType === 'speech_cards') {
-    const cards = [target, interest].filter(Boolean);
-
-    previewState = {
-      screen: 'speech_cards',
-      cards,
-      game_type: '',
-      target_word: target,
-      interest,
-      notes,
-      status: 'İçerik stüdyosu kart önizlemesi'
-    };
-  } else {
-    previewState = {
-      screen: 'interactive_game',
-      cards: [],
-      game_type: gameType,
-      target_word: target,
-      interest,
-      notes,
-      status: 'İçerik stüdyosu oyun önizlemesi'
-    };
-  }
-
-  renderPreview();
-}
-
-function resetPreview() {
-  previewState = {
-    screen: 'idle',
-    cards: [],
-    game_type: '',
-    target_word: '',
-    interest: '',
-    notes: '',
-    status: 'Henüz içerik oluşturulmadı'
-  };
-  renderPreview();
-}
-
-async function sendSpeechCards() {
-  const input = document.getElementById('words');
-  const words = (input?.value || '')
-    .split(',')
-    .map(x => x.trim())
-    .filter(Boolean);
-
-  const q = words.map(w => 'words=' + encodeURIComponent(w)).join('&');
-
-  try {
-    await fetch(API + '/screen/speech_cards?' + q, { method: 'POST' });
-    setResult('Konuşma kartları gönderildi.', 'ok');
-    loadQueue();
-
-    previewState = {
-      screen: 'speech_cards',
-      cards: words,
-      game_type: '',
-      target_word: '',
-      interest: '',
-      notes: '',
-      status: 'Pi’ye gönderilen konuşma kartları'
-    };
-    renderPreview();
-  } catch {
-    setResult('Konuşma kartları gönderilemedi.', 'err');
-  }
-}
-
-async function appendAiContent() {
-  const target = document.getElementById('target')?.value || '';
-  const interest = document.getElementById('interest')?.value || '';
-  const notes = document.getElementById('notes')?.value || '';
-  const previewScreenType = document.getElementById('previewScreenType')?.value || 'speech_cards';
-  const gameType = document.getElementById('gameType')?.value || 'interactive_game';
-
-  const payload = {
-    target_word: target,
-    interest: interest,
-    notes: notes,
-    goal: 'speech_encouragement',
-    screen: previewScreenType,
-    game_type: gameType
-  };
-
-  try {
-    await fetch(API + '/content/append', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    setResult('Dinamik içerik kuyruğa eklendi.', 'ok');
-    loadQueue();
-
-    if (previewScreenType === 'speech_cards') {
-      previewState = {
-        screen: 'speech_cards',
-        cards: [target, interest].filter(Boolean),
-        game_type: '',
-        target_word: target,
-        interest,
-        notes,
-        status: 'Pi’ye gönderilen dinamik kart içeriği'
-      };
-    } else {
-      previewState = {
-        screen: 'interactive_game',
-        cards: [],
-        game_type: gameType,
-        target_word: target,
-        interest,
-        notes,
-        status: 'Pi’ye gönderilen dinamik oyun içeriği'
-      };
+          `;
+        }).join("");
+      } catch (err) {
+        console.error(err);
+        grid.innerHTML = `<div class="muted">Bir hata oluştu</div>`;
+      }
     }
 
-    renderPreview();
-  } catch {
-    setResult('Dinamik içerik gönderilemedi.', 'err');
-  }
-}
+    async function createManualAsset() {
+      const label = document.getElementById("assetLabel").value.trim();
+      const tags = document.getElementById("assetTags").value.trim();
+      const interests = document.getElementById("assetInterests").value.trim();
+      const notes = document.getElementById("assetNotes").value.trim();
+      const preferred = document.getElementById("assetPreferred").checked;
+      const imageFile = document.getElementById("assetImageFile").files[0];
 
-async function shutdownLater() {
-  const minutes = document.getElementById('minutes')?.value || '15';
+      if (!label) {
+        setMessage("Asset adı gerekli", false);
+        return;
+      }
 
-  try {
-    await fetch(API + '/session/shutdown_after?minutes=' + encodeURIComponent(minutes), {
-      method: 'POST'
-    });
-    setResult('Süreli kapatma komutu gönderildi.', 'warn');
-    loadQueue();
-  } catch {
-    setResult('Süreli kapatma gönderilemedi.', 'err');
-  }
-}
+      if (!imageFile) {
+        setMessage("Bir görsel seçmelisin", false);
+        return;
+      }
 
-async function shutdownNow() {
-  try {
-    await fetch(API + '/session/shutdown_now', { method: 'POST' });
-    setResult('Anında kapatma komutu gönderildi.', 'warn');
-    loadQueue();
-  } catch {
-    setResult('Kapatma komutu gönderilemedi.', 'err');
-  }
-}
+      try {
+        const formData = new FormData();
+        formData.append("label", label);
+        formData.append("tags", tags);
+        formData.append("interests", interests);
+        formData.append("notes", notes);
+        formData.append("preferred", preferred ? "true" : "false");
+        formData.append("image", imageFile);
 
-async function loadQueue() {
-  const target = document.getElementById('queue');
-  if (!target) return;
+        const res = await fetch("/assets/create_manual", {
+          method: "POST",
+          body: formData
+        });
 
-  try {
-    const r = await fetch(API + '/queue');
-    const d = await r.json();
-    const items = d.commands || [];
+        const data = await res.json();
 
-    target.innerHTML = items.length
-      ? items.map(c => `
-        <div class="queue-item">
-          <div class="row">
-            <b>${escapeHtml(c.action || '')}</b>
-            <span>${escapeHtml(c.status || 'pending')}</span>
-          </div>
-          <div class="muted">${escapeHtml(c.timestamp || '')}</div>
-        </div>
-      `).join('')
-      : 'Bekleyen komut yok';
-  } catch {
-    target.innerHTML = 'Backend bağlantısı bekleniyor';
-  }
-}
-
-async function loadMode() {
-  try {
-    const r = await fetch('/mode');
-    const d = await r.json();
-
-    setText('activeMode', d.mode.toUpperCase());
-
-    const select = document.getElementById('modeSelect');
-    if (select) select.value = d.mode;
-
-    const badge = document.getElementById('modeBadge');
-    if (badge) {
-      badge.textContent = d.mode === 'test' ? '[TEST MODU]' : '[PROD]';
-    }
-  } catch {
-    setText('activeMode', 'bilinmiyor');
-  }
-}
-
-async function setMode() {
-  const select = document.getElementById('modeSelect');
-  const mode = select ? select.value : 'prod';
-
-  try {
-    await fetch('/mode/set?mode=' + encodeURIComponent(mode), {
-      method: 'POST'
-    });
-
-    setResult('Çalışma modu değiştirildi: ' + mode.toUpperCase(), 'warn');
-
-    await loadMode();
-    await loadQueue();
-    await loadAttentionMetrics();
-    await loadSpeechMetrics();
-    await loadMilestones();
-  } catch {
-    setResult('Mod değiştirilemedi.', 'err');
-  }
-}
-
-async function injectFakeSpeech() {
-  try {
-    const r = await fetch('/dev/fake_speech', { method: 'POST' });
-    const d = await r.json();
-
-    if (d.ok) {
-      setResult('Test konuşma verisi üretildi.', 'ok');
-      await loadSpeechMetrics();
-      await loadMilestones();
-    } else {
-      setResult(d.error || 'Test verisi üretilemedi.', 'err');
-    }
-  } catch {
-    setResult('Test verisi üretilemedi.', 'err');
-  }
-}
-
-async function saveDraft() {
-  const name = document.getElementById('draftName')?.value?.trim() || '';
-
-  if (!name) {
-    setResult('Taslak adı boş olamaz.', 'err');
-    return;
-  }
-
-  try {
-    await fetch('/draft/save', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name,
-        payload: collectDraftPayload()
-      })
-    });
-
-    setResult('Taslak kaydedildi.', 'ok');
-    await loadDrafts();
-  } catch {
-    setResult('Taslak kaydedilemedi.', 'err');
-  }
-}
-
-async function loadDrafts() {
-  const list = document.getElementById('draftList');
-  if (!list) return;
-
-  try {
-    const r = await fetch('/drafts');
-    const d = await r.json();
-    const drafts = d.drafts || [];
-
-    list.innerHTML = drafts.length
-      ? drafts.map(item => `<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)}</option>`).join('')
-      : '<option value="">Taslak yok</option>';
-  } catch {
-    list.innerHTML = '<option value="">Taslak yüklenemedi</option>';
-  }
-}
-
-async function loadSelectedDraft() {
-  const list = document.getElementById('draftList');
-  const name = list?.value || '';
-
-  if (!name) {
-    setResult('Yüklenecek taslak seçilmedi.', 'err');
-    return;
-  }
-
-  try {
-    const r = await fetch('/draft?name=' + encodeURIComponent(name));
-    const d = await r.json();
-
-    if (d.payload) {
-      applyDraftPayload(d.payload);
-      const nameEl = document.getElementById('draftName');
-      if (nameEl) nameEl.value = d.name || name;
-      setResult('Taslak yüklendi.', 'ok');
-    } else {
-      setResult('Taslak bulunamadı.', 'err');
-    }
-  } catch {
-    setResult('Taslak yüklenemedi.', 'err');
-  }
-}
-
-async function deleteSelectedDraft() {
-  const list = document.getElementById('draftList');
-  const name = list?.value || '';
-
-  if (!name) {
-    setResult('Silinecek taslak seçilmedi.', 'err');
-    return;
-  }
-
-  try {
-    await fetch('/draft/delete?name=' + encodeURIComponent(name), {
-      method: 'POST'
-    });
-
-    setResult('Taslak silindi.', 'warn');
-    await loadDrafts();
-  } catch {
-    setResult('Taslak silinemedi.', 'err');
-  }
-}
-
-async function startServer(name) {
-  try {
-    await fetch(API + '/server/start?name=' + encodeURIComponent(name), {
-      method: 'POST'
-    });
-    loadServerStatus();
-  } catch {}
-}
-
-async function startAllServers() {
-  try {
-    await fetch(API + '/server/start_all', { method: 'POST' });
-    loadServerStatus();
-  } catch {}
-}
-
-async function stopAllServersSafe() {
-  try {
-    await fetch(API + '/server/stop_all_safe', { method: 'POST' });
-    loadServerStatus();
-  } catch {}
-}
-
-async function stopAllServers() {
-  try {
-    await fetch(API + '/server/stop_all', { method: 'POST' });
-    setResult('Tüm servisler kapatılıyor. Panel de kapanabilir.', 'warn');
-    setTimeout(loadServerStatus, 1000);
-  } catch {}
-}
-
-async function loadServerStatus() {
-  try {
-    const r = await fetch(API + '/server/status');
-    const d = await r.json();
-
-    setText('panelStatus', d.panel || 'bilinmiyor');
-    setText('toolStatus', d.tool || 'bilinmiyor');
-    setText('middlewareStatus', d.middleware || 'bilinmiyor');
-    setText('dashboardStatus', d.dashboard || 'bilinmiyor');
-    setText('fiftyoneStatus', d.fiftyone_available ? 'hazır' : 'yok');
-  } catch {
-    ['panelStatus', 'toolStatus', 'middlewareStatus', 'dashboardStatus', 'fiftyoneStatus'].forEach(id => {
-      setText(id, 'bağlantı yok');
-    });
-  }
-}
-
-async function loadSpeechMetrics() {
-  try {
-    const r = await fetch(API + '/panel/api/ai_decision');
-    const d = await r.json();
-    const s = d.speech || {};
-
-    const attempt = Number(s.attempt_rate || 0);
-    const avgLevel = Number(s.avg_level || 0);
-    const levelPercent = (avgLevel / 3) * 100;
-    const twoWordPercent = Number(d.two_word_rate || 0) * 100;
-
-    setText('statSpeech', asPercent(attempt));
-    setText('statNewWords', String(d.new_word_count ?? '0'));
-    setText('statTwoWord', String(d.two_word_count ?? '0'));
-
-    setProgress('wordBar', levelPercent);
-    setText('wordText', 'Ortalama seviye: ' + avgLevel.toFixed(2));
-
-    setProgress('twoWordBar', twoWordPercent);
-    setText('twoWordText', "2'li ifade oranı: " + Math.round(twoWordPercent) + '%');
-  } catch {
-    setText('statSpeech', 'Veri yok');
-    setText('statNewWords', 'Veri yok');
-    setText('statTwoWord', 'Veri yok');
-    setText('wordText', 'Konuşma verisi bekleniyor');
-    setText('twoWordText', "2'li ifade verisi bekleniyor");
-  }
-}
-
-async function loadAttentionMetrics() {
-  try {
-    const r = await fetch(API + '/panel/api/summary');
-    const d = await r.json();
-
-    const attentionPercent = Number(d.average_attention_percent ?? d.average_attention ?? 0);
-
-    setText('statAttention', '%' + Math.round(attentionPercent));
-    setProgress('attentionBar', attentionPercent);
-    setText('attentionText', 'Son ortalama dikkat: %' + Math.round(attentionPercent));
-
-    const priorities = d.priorities || [];
-    const target = document.getElementById('priorities');
-    if (!target) return;
-
-    target.innerHTML = priorities.length
-      ? priorities.map(p => `
-        <div class="queue-item">
-          <div class="row">
-            <b>${escapeHtml(p.title || p.name || 'Öncelik')}</b>
-            <span>${escapeHtml(String(p.score ?? ''))}</span>
-          </div>
-          <div class="muted">${escapeHtml(p.note || '')}</div>
-        </div>
-      `).join('')
-      : 'Öncelik verisi yok';
-  } catch {
-    setText('statAttention', 'Veri yok');
-    setText('attentionText', 'Dikkat verisi bekleniyor');
-    const target = document.getElementById('priorities');
-    if (target) target.textContent = 'Öncelik verisi bekleniyor';
-  }
-}
-
-async function loadMilestones() {
-  try {
-    const r = await fetch(API + '/panel/api/milestones');
-    const d = await r.json();
-
-    const words = d.words || [];
-    const phrases = d.two_word_phrases || [];
-
-    const milestoneList = document.getElementById('milestoneList');
-    const phraseList = document.getElementById('phraseList');
-
-    if (milestoneList) {
-      milestoneList.innerHTML = words.length
-        ? words.map(item => `
-          <div class="milestone">
-            <div class="row">
-              <b>${escapeHtml(item.word || '')}</b>
-              <span>${escapeHtml(item.status || '')}</span>
-            </div>
-            <div class="muted">${escapeHtml(item.previous || '-')} → ${escapeHtml(item.current || '-')}</div>
-          </div>
-        `).join('')
-        : 'Milestone verisi yok';
+        if (data.ok) {
+          setMessage("Asset başarıyla oluşturuldu", true);
+          resetAssetForm();
+          await refreshAll();
+        } else {
+          setMessage(data.error || data.detail || "Asset oluşturulamadı", false);
+        }
+      } catch (err) {
+        console.error(err);
+        setMessage("İstek sırasında hata oluştu", false);
+      }
     }
 
-    if (phraseList) {
-      phraseList.innerHTML = phrases.length
-        ? phrases.map(item => `
-          <div class="phrase">
-            <div class="row">
-              <b>${escapeHtml(item.phrase || '')}</b>
-              <span>${item.spontaneous ? 'spontan' : 'yönlendirmeli'}</span>
-            </div>
-            <div class="muted">Kullanım: ${escapeHtml(String(item.count ?? 0))}</div>
-          </div>
-        `).join('')
-        : "2'li ifade verisi yok";
-    }
-  } catch {
-    setText('milestoneList', 'Milestone endpointi bekleniyor');
-    setText('phraseList', "2'li ifade endpointi bekleniyor");
-  }
-}
+    async function deleteAsset(assetId) {
+      if (!confirm(`Bu asset silinsin mi?\n${assetId}`)) {
+        return;
+      }
 
-async function lookupTrToEn(value) {
-  const target = document.getElementById('translationSuggest');
-  const enInput = document.getElementById('assetLabelEn');
-  const candidates = document.getElementById('assetTranslationCandidates');
+      try {
+        const formData = new FormData();
+        formData.append("asset_id", assetId);
 
-  if (!value?.trim()) {
-    target.className = 'status-box muted';
-    target.textContent = 'Türkçe label girildiğinde İngilizce karşılık önerilir.';
-    candidates.innerHTML = '<option value="">Aday yok</option>';
-    return;
-  }
+        const res = await fetch("/assets/delete", {
+          method: "POST",
+          body: formData
+        });
 
-  try {
-    const r = await fetch('/dictionary/tr-to-en?term=' + encodeURIComponent(value));
-    const d = await r.json();
+        const data = await res.json();
 
-    const list = d.candidates_en || [];
-    const best = d.best_en || '';
-
-    if (enInput && !enInput.value.trim()) {
-      enInput.value = best;
+        if (data.ok) {
+          await refreshAll();
+        } else {
+          alert(data.error || data.detail || "Silme başarısız");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Silme sırasında hata oluştu");
+      }
     }
 
-    candidates.innerHTML = list.length
-      ? list.map(x => `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('')
-      : '<option value="">Aday yok</option>';
-
-    target.className = 'status-box ok';
-    target.textContent = 'Öneri: ' + list.join(', ');
-  } catch {
-    target.className = 'status-box err';
-    target.textContent = 'Çeviri önerisi alınamadı.';
-  }
-}
-
-function applySelectedTranslation() {
-  const dd = document.getElementById('assetTranslationCandidates');
-  const enInput = document.getElementById('assetLabelEn');
-  if (dd && enInput && dd.value) {
-    enInput.value = dd.value;
-  }
-}
-
-async function lookupFoTrToEn(value) {
-  const target = document.getElementById('foTranslationSuggest');
-  const enInput = document.getElementById('foQueryEn');
-
-  if (!value?.trim()) {
-    target.className = 'status-box muted';
-    target.textContent = 'Türkçe arama girildiğinde İngilizce karşılık önerilir.';
-    return;
-  }
-
-  try {
-    const r = await fetch('/dictionary/tr-to-en?term=' + encodeURIComponent(value));
-    const d = await r.json();
-
-    if (enInput) {
-      enInput.value = d.best_en || '';
-    }
-
-    target.className = 'status-box ok';
-    target.textContent = 'Öneri: ' + (d.candidates_en || []).join(', ');
-  } catch {
-    target.className = 'status-box err';
-    target.textContent = 'Çeviri önerisi alınamadı.';
-  }
-}
-
-function handleAssetFileChange(event) {
-  const file = event?.target?.files?.[0];
-  const box = document.getElementById('assetPreviewBox');
-
-  if (!file || !box) {
-    assetFormImageBase64 = '';
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    assetFormImageBase64 = e.target?.result || '';
-    box.innerHTML = `<img src="${assetFormImageBase64}" alt="asset preview" />`;
-  };
-  reader.readAsDataURL(file);
-}
-
-function resetAssetForm() {
-  assetFormImageBase64 = '';
-
-  [
-    'assetLabelTr', 'assetLabelEn',
-    'assetTagsTr', 'assetTagsEn',
-    'assetInterestsTr', 'assetInterestsEn',
-    'assetSourceQueryTr', 'assetSourceQueryEn',
-    'assetSourceUrl', 'assetNotes'
-  ].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-
-  const sourceEl = document.getElementById('assetSource');
-  if (sourceEl) sourceEl.value = 'manual';
-
-  const pref = document.getElementById('assetPreferred');
-  if (pref) pref.checked = false;
-
-  const file = document.getElementById('assetFile');
-  if (file) file.value = '';
-
-  const candidates = document.getElementById('assetTranslationCandidates');
-  if (candidates) candidates.innerHTML = '<option value="">Aday yok</option>';
-
-  const box = document.getElementById('assetPreviewBox');
-  if (box) {
-    box.innerHTML = `<div class="preview-empty">Seçilen görsel burada önizlenecek.</div>`;
-  }
-
-  const result = document.getElementById('assetCreateResult');
-  if (result) {
-    result.className = 'status-box muted';
-    result.textContent = 'Henüz asset kaydedilmedi.';
-  }
-}
-
-async function createAsset() {
-  const result = document.getElementById('assetCreateResult');
-
-  const payload = {
-    label_tr: document.getElementById('assetLabelTr')?.value?.trim() || '',
-    label_en: document.getElementById('assetLabelEn')?.value?.trim() || '',
-    tags_tr: document.getElementById('assetTagsTr')?.value || '',
-    tags_en: document.getElementById('assetTagsEn')?.value || '',
-    interests_tr: document.getElementById('assetInterestsTr')?.value || '',
-    interests_en: document.getElementById('assetInterestsEn')?.value || '',
-    preferred: !!document.getElementById('assetPreferred')?.checked,
-    source: document.getElementById('assetSource')?.value || 'manual',
-    source_query_tr: document.getElementById('assetSourceQueryTr')?.value || '',
-    source_query_en: document.getElementById('assetSourceQueryEn')?.value || '',
-    source_url: document.getElementById('assetSourceUrl')?.value || '',
-    notes: document.getElementById('assetNotes')?.value || '',
-    image_base64: assetFormImageBase64
-  };
-
-  if (!payload.label_tr) {
-    result.className = 'status-box err';
-    result.textContent = 'Türkçe label boş olamaz.';
-    return;
-  }
-
-  if (!payload.image_base64) {
-    result.className = 'status-box err';
-    result.textContent = 'Görsel seçilmedi.';
-    return;
-  }
-
-  try {
-    const r = await fetch('/assets/create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    const d = await r.json();
-
-    if (d.ok) {
-      result.className = 'status-box ok';
-      result.textContent = 'Asset kaydedildi: ' + (d.asset?.label_tr || '');
+    async function refreshAll() {
+      await loadServerStatus();
+      await loadStats();
       await loadAssets();
-      await loadAssetStats();
-      await loadAssetHistory();
-      resetAssetForm();
-    } else {
-      result.className = 'status-box err';
-      result.textContent = d.error || 'Asset kaydedilemedi.';
     }
-  } catch {
-    result.className = 'status-box err';
-    result.textContent = 'Asset kaydedilemedi.';
-  }
-}
 
-function selectAssetForEdit(assetId) {
-  const asset = assetCache[assetId];
-  if (!asset) return;
-
-  selectedAssetId = asset.asset_id || '';
-
-  document.getElementById('editAssetId').value = asset.asset_id || '';
-  document.getElementById('editAssetLabelTr').value = asset.label_tr || '';
-  document.getElementById('editAssetLabelEn').value = asset.label_en || '';
-  document.getElementById('editAssetTagsTr').value = (asset.tags_tr || []).join(', ');
-  document.getElementById('editAssetTagsEn').value = (asset.tags_en || []).join(', ');
-  document.getElementById('editAssetInterestsTr').value = (asset.interests_tr || []).join(', ');
-  document.getElementById('editAssetInterestsEn').value = (asset.interests_en || []).join(', ');
-  document.getElementById('editAssetSource').value = asset.source || '';
-  document.getElementById('editAssetSourceQueryTr').value = asset.source_query_tr || '';
-  document.getElementById('editAssetSourceQueryEn').value = asset.source_query_en || '';
-  document.getElementById('editAssetSourceUrl').value = asset.source_url || '';
-  document.getElementById('editAssetStatus').value = asset.status || 'active';
-  document.getElementById('editAssetPreferred').checked = !!asset.preferred;
-  document.getElementById('editAssetNotes').value = asset.notes || '';
-
-  const result = document.getElementById('assetEditResult');
-  result.className = 'status-box muted';
-  result.textContent = 'Seçili asset düzenlemeye hazır.';
-
-  document.querySelectorAll('.asset-card').forEach(el => {
-    if (el.dataset.assetId === assetId) el.classList.add('active');
-    else el.classList.remove('active');
-  });
-}
-
-async function loadAssets() {
-  const q = document.getElementById('assetSearchQ')?.value || '';
-  const status = document.getElementById('assetFilterStatus')?.value || '';
-  const target = document.getElementById('assetList');
-  if (!target) return;
-
-  try {
-    const r = await fetch('/assets/list?q=' + encodeURIComponent(q) + '&status=' + encodeURIComponent(status));
-    const d = await r.json();
-    const assets = d.assets || [];
-
-    assetCache = {};
-    assets.forEach(asset => assetCache[asset.asset_id] = asset);
-
-    target.innerHTML = assets.length
-      ? assets.map(asset => `
-        <div class="asset-card ${selectedAssetId === asset.asset_id ? 'active' : ''}" data-asset-id="${escapeHtml(asset.asset_id || '')}">
-          <div class="row">
-            <b>${escapeHtml(asset.label_tr || '')}</b>
-            <span>${escapeHtml(asset.status || '')}</span>
-          </div>
-          <div class="muted">${escapeHtml(asset.label_en || '')}</div>
-          <div class="muted">${escapeHtml(asset.asset_id || '')}</div>
-          ${asset.image_path ? `<img class="asset-thumb" src="/${escapeHtml(asset.image_path)}" alt="${escapeHtml(asset.label_tr || '')}" />` : ''}
-          <div>${renderTags(asset.tags_tr || [])}</div>
-          <div>${renderTags(asset.tags_en || [])}</div>
-          <div class="muted" style="margin-top:8px;">
-            source: ${escapeHtml(asset.source || '')}
-            ${asset.preferred ? ' • preferred' : ''}
-            • used: ${escapeHtml(String(asset.used_count ?? 0))}
-          </div>
-          <button class="action secondary" onclick="selectAssetForEdit('${escapeHtml(asset.asset_id || '')}')">Düzenle</button>
-        </div>
-      `).join('')
-      : 'Kayıtlı asset bulunamadı.';
-  } catch {
-    target.textContent = 'Asset listesi yüklenemedi.';
-  }
-}
-
-async function updateSelectedAsset() {
-  const result = document.getElementById('assetEditResult');
-
-  if (!selectedAssetId) {
-    result.className = 'status-box err';
-    result.textContent = 'Önce bir asset seç.';
-    return;
-  }
-
-  const payload = {
-    label_tr: document.getElementById('editAssetLabelTr')?.value || '',
-    label_en: document.getElementById('editAssetLabelEn')?.value || '',
-    tags_tr: document.getElementById('editAssetTagsTr')?.value || '',
-    tags_en: document.getElementById('editAssetTagsEn')?.value || '',
-    interests_tr: document.getElementById('editAssetInterestsTr')?.value || '',
-    interests_en: document.getElementById('editAssetInterestsEn')?.value || '',
-    source: document.getElementById('editAssetSource')?.value || '',
-    source_query_tr: document.getElementById('editAssetSourceQueryTr')?.value || '',
-    source_query_en: document.getElementById('editAssetSourceQueryEn')?.value || '',
-    source_url: document.getElementById('editAssetSourceUrl')?.value || '',
-    status: document.getElementById('editAssetStatus')?.value || 'active',
-    preferred: !!document.getElementById('editAssetPreferred')?.checked,
-    notes: document.getElementById('editAssetNotes')?.value || ''
-  };
-
-  try {
-    const r = await fetch('/assets/update?asset_id=' + encodeURIComponent(selectedAssetId), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    const d = await r.json();
-
-    if (d.ok) {
-      result.className = 'status-box ok';
-      result.textContent = 'Asset güncellendi.';
-      await loadAssets();
-      await loadAssetStats();
-      await loadAssetHistory();
-    } else {
-      result.className = 'status-box err';
-      result.textContent = d.error || 'Asset güncellenemedi.';
-    }
-  } catch {
-    result.className = 'status-box err';
-    result.textContent = 'Asset güncellenemedi.';
-  }
-}
-
-async function runFiftyOneImport() {
-  const result = document.getElementById('foImportResult');
-
-  const payload = {
-    query_tr: document.getElementById('foQueryTr')?.value || '',
-    max_samples: Number(document.getElementById('foMaxSamples')?.value || 5),
-    split: document.getElementById('foSplit')?.value || 'validation',
-    preferred: !!document.getElementById('foPreferred')?.checked,
-    notes: document.getElementById('foNotes')?.value || ''
-  };
-
-  if (!payload.query_tr.trim()) {
-    result.className = 'status-box err';
-    result.textContent = 'Türkçe arama boş olamaz.';
-    return;
-  }
-
-  result.className = 'status-box muted';
-  result.textContent = 'FiftyOne import çalışıyor...';
-
-  try {
-    const r = await fetch('/fiftyone/import', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    const d = await r.json();
-
-    if (d.ok) {
-      result.className = 'status-box ok';
-      result.textContent = `İçe alındı: ${d.imported_count || 0} asset | TR: ${d.query_tr || ''} | EN: ${d.query_en || ''}`;
-      await loadAssets();
-      await loadAssetStats();
-      await loadAssetHistory();
-    } else {
-      result.className = 'status-box err';
-      result.textContent = d.error || 'FiftyOne import başarısız.';
-    }
-  } catch {
-    result.className = 'status-box err';
-    result.textContent = 'FiftyOne import başarısız.';
-  }
-}
-
-async function migrateManifest() {
-  const result = document.getElementById('manifestMigrateResult');
-  result.className = 'status-box muted';
-  result.textContent = 'Manifest dönüştürülüyor...';
-
-  try {
-    const r = await fetch('/assets/migrate_manifest', { method: 'POST' });
-    const d = await r.json();
-
-    if (d.ok) {
-      result.className = 'status-box ok';
-      result.textContent = `Dönüştürüldü: ${d.migrated_count} kayıt | Yedek: ${d.backup_path}`;
-      await loadAssets();
-      await loadAssetStats();
-      await loadAssetHistory();
-    } else {
-      result.className = 'status-box err';
-      result.textContent = d.error || 'Manifest dönüşümü başarısız.';
-    }
-  } catch {
-    result.className = 'status-box err';
-    result.textContent = 'Manifest dönüşümü başarısız.';
-  }
-}
-
-async function loadAssetStats() {
-  const target = document.getElementById('assetStats');
-  if (!target) return;
-
-  try {
-    const r = await fetch('/assets/stats');
-    const d = await r.json();
-
-    const bySource = Object.entries(d.by_source || {})
-      .map(([k, v]) => `<span class="badge">${escapeHtml(k)}: ${escapeHtml(String(v))}</span>`)
-      .join('');
-
-    const topLabels = (d.top_labels || [])
-      .map(x => `<span class="badge">${escapeHtml(x.label_tr)} (${escapeHtml(String(x.count))})</span>`)
-      .join('');
-
-    target.innerHTML = `
-      <div class="queue-item"><b>Toplam Asset:</b> ${escapeHtml(String(d.total_assets ?? 0))}</div>
-      <div class="queue-item"><b>Active Asset:</b> ${escapeHtml(String(d.active_assets ?? 0))}</div>
-      <div class="queue-item"><b>Preferred Asset:</b> ${escapeHtml(String(d.preferred_assets ?? 0))}</div>
-      <div class="queue-item"><b>Kaynağa Göre:</b><br>${bySource || 'veri yok'}</div>
-      <div class="queue-item"><b>En Sık Türkçe Label:</b><br>${topLabels || 'veri yok'}</div>
-    `;
-  } catch {
-    target.textContent = 'İstatistik yüklenemedi.';
-  }
-}
-
-async function loadAssetHistory() {
-  const target = document.getElementById('assetHistory');
-  if (!target) return;
-
-  try {
-    const r = await fetch('/assets/history?limit=30');
-    const d = await r.json();
-    const items = d.items || [];
-
-    target.innerHTML = items.length
-      ? items.map(item => `
-        <div class="history-item">
-          <div class="row">
-            <b>${escapeHtml(item.action || '')}</b>
-            <span>${escapeHtml(item.asset_id || '')}</span>
-          </div>
-          <div class="muted">${escapeHtml(item.timestamp || '')}</div>
-          <div class="muted">${escapeHtml(JSON.stringify(item.payload || {}))}</div>
-        </div>
-      `).join('')
-      : 'Geçmiş verisi yok.';
-  } catch {
-    target.textContent = 'Geçmiş yüklenemedi.';
-  }
-}
-
-async function initialLoad() {
-  renderPreview();
-
-  await Promise.all([
-    loadMode(),
-    loadDrafts(),
-    loadQueue(),
-    loadServerStatus(),
-    loadAttentionMetrics(),
-    loadSpeechMetrics(),
-    loadMilestones(),
-    loadAssets(),
-    loadAssetStats(),
-    loadAssetHistory()
-  ]);
-}
-
-initialLoad();
-setInterval(loadQueue, 5000);
-setInterval(loadServerStatus, 5000);
-setInterval(loadAttentionMetrics, 10000);
-setInterval(loadSpeechMetrics, 10000);
-setInterval(loadMilestones, 15000);
-</script>
+    refreshAll();
+  </script>
 </body>
 </html>
