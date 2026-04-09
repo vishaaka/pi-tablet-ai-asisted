@@ -29,6 +29,15 @@ from asset_manager import (
     asset_stats,
 )
 from asset_history import list_asset_history
+from scene_manager import (
+    list_scenes,
+    get_scene,
+    create_scene,
+    update_scene,
+    delete_scene,
+    scene_stats,
+    build_scene_payload,
+)
 
 import requests
 import os
@@ -317,6 +326,69 @@ def assets_stats():
 def assets_history(limit: int = 100):
     return {"items": list_asset_history(limit=limit)}
 
+# ---- Katmanlı Sahne Editörü ----
+
+@app.get("/scenes/list")
+def scenes_list(
+    q: str = "",
+    target_word: str = "",
+    status: str = "",
+):
+    return {
+        "items": list_scenes(
+            q=q,
+            target_word=target_word,
+            status=status,
+        )
+    }
+
+
+@app.get("/scenes/get")
+def scenes_get(scene_id: str):
+    item = get_scene(scene_id)
+    if not item:
+        return JSONResponse({"error": "Sahne bulunamadı"}, status_code=404)
+    return item
+
+
+@app.post("/scenes/create")
+def scenes_create(payload: dict):
+    try:
+        item = create_scene(payload)
+        return {"ok": True, "scene": item}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
+
+
+@app.post("/scenes/update")
+def scenes_update(scene_id: str, payload: dict):
+    try:
+        item = update_scene(scene_id, payload)
+        return {"ok": True, "scene": item}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
+
+
+@app.post("/scenes/delete")
+def scenes_delete(scene_id: str):
+    try:
+        return delete_scene(scene_id)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
+
+
+@app.get("/scenes/stats")
+def scenes_stats():
+    return scene_stats()
+
+
+@app.post("/screen/layered_scene")
+def screen_layered_scene(payload: dict):
+    try:
+        built = build_scene_payload(payload)
+        return push_command("set_screen", built)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
 
 # ---- Panel için proxy endpointler ----
 
