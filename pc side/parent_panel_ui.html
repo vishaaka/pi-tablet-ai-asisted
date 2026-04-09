@@ -8,21 +8,18 @@
     :root{
       --bg:#0f172a;
       --panel:#111827;
-      --panel-2:#1f2937;
-      --card:#111827;
       --muted:#94a3b8;
       --text:#e5e7eb;
       --line:#334155;
       --accent:#22c55e;
-      --accent-2:#38bdf8;
       --warn:#f59e0b;
       --danger:#ef4444;
-      --chip:#0b1220;
       --shadow:0 10px 25px rgba(0,0,0,.25);
       --radius:18px;
     }
 
     *{box-sizing:border-box}
+
     body{
       margin:0;
       font-family:Arial,Helvetica,sans-serif;
@@ -136,7 +133,7 @@
 
     .grid-3{
       display:grid;
-      grid-template-columns:380px 1fr 340px;
+      grid-template-columns:360px 1fr 360px;
       gap:18px;
     }
 
@@ -225,17 +222,9 @@
       color:#cbd5e1;
     }
 
-    button.warn{
-      background:#92400e;
-    }
-
-    button.danger{
-      background:#7f1d1d;
-    }
-
-    button.good{
-      background:#065f46;
-    }
+    button.warn{ background:#92400e; }
+    button.danger{ background:#7f1d1d; }
+    button.good{ background:#065f46; }
 
     .preview-shell{
       display:grid;
@@ -254,7 +243,7 @@
       align-items:center;
       justify-content:center;
       overflow:hidden;
-      color:var(--muted);
+      color:#94a3b8;
       text-align:center;
       padding:16px;
     }
@@ -401,6 +390,13 @@
       padding:12px;
     }
 
+    .scene-toolbar{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+
     .scene-canvas{
       position:relative;
       width:100%;
@@ -409,13 +405,17 @@
       border-radius:12px;
       overflow:hidden;
       border:1px solid #cbd5e1;
+      user-select:none;
     }
 
     .scene-layer{
       position:absolute;
       overflow:hidden;
-      cursor:pointer;
+      cursor:move;
       border:1px dashed transparent;
+      display:flex;
+      align-items:flex-start;
+      justify-content:flex-start;
     }
 
     .scene-layer.selected{
@@ -426,20 +426,15 @@
     .scene-layer img{
       width:100%;
       height:100%;
-      object-fit:contain;
       display:block;
       pointer-events:none;
     }
 
     .scene-layer.text-layer,
     .scene-layer.guide-layer{
-      display:flex;
-      align-items:flex-start;
-      justify-content:flex-start;
       padding:4px 6px;
       white-space:pre-wrap;
       font-weight:700;
-      pointer-events:none;
     }
 
     .layer-list{
@@ -722,7 +717,7 @@
               <div class="actions">
                 <button onclick="createManualAsset()">Asset Kaydet</button>
                 <button class="alt" onclick="resetAssetForm()">Formu Temizle</button>
-                <button class="alt" id="saveEditedBtn" onclick="saveEditedAsset()">Seçili Asseti Güncelle</button>
+                <button class="alt" onclick="saveEditedAsset()">Seçili Asseti Güncelle</button>
               </div>
 
               <div id="assetCreateMessage" class="msg"></div>
@@ -758,7 +753,7 @@
       <div class="grid-3">
         <div class="panel">
           <h2>Sahne Tanımı</h2>
-          <div class="section-note">Arka, orta, ön, yazı ve rehber katmanlarını tek sahnede birleştir.</div>
+          <div class="section-note">Katmanları aynı anda gör, tıkla, sürükle, öne/arkaya taşı.</div>
 
           <div class="field">
             <label>Sahne Adı</label>
@@ -807,7 +802,7 @@
 
           <hr style="border-color:var(--line); margin:18px 0;">
 
-          <h3>Katman Ekle</h3>
+          <h3>Katman Ekle / Güncelle</h3>
 
           <div class="field">
             <label>Katman Türü</label>
@@ -896,11 +891,20 @@
 
         <div class="panel">
           <h2>Canlı Sahne Önizleme</h2>
+
+          <div class="scene-toolbar">
+            <button class="alt" onclick="bringSelectedToFront()">Öne Getir</button>
+            <button class="alt" onclick="sendSelectedToBack()">Arkaya Gönder</button>
+            <button class="alt" onclick="moveSelectedToMiddle()">Ortada Kalsın</button>
+            <button class="alt" onclick="centerSelectedOnCanvas()">Merkeze Al</button>
+          </div>
+
           <div class="scene-canvas-wrap">
             <div id="sceneCanvas" class="scene-canvas"></div>
           </div>
+
           <div class="small" style="margin-top:10px;">
-            Not: Şimdilik sürükle-bırak yok. X / Y / W / H / Z değerleri ile katman yerleşimi yapılıyor.
+            Katmana tıkla, seç. Seçili katmanı mouse ile sürükleyebilirsin. X / Y alanları otomatik güncellenir.
           </div>
         </div>
 
@@ -970,12 +974,20 @@
 
   <script>
     let selectedImageBase64 = "";
-    let selectedImageMime = "image/png";
     let allAssetsCache = [];
     let sceneLayers = [];
     let selectedLayerId = "";
     let editingSceneId = "";
     let editingAssetId = "";
+
+    let dragState = {
+      active: false,
+      layerId: "",
+      startMouseX: 0,
+      startMouseY: 0,
+      startX: 0,
+      startY: 0
+    };
 
     function el(id){ return document.getElementById(id); }
 
@@ -1006,20 +1018,12 @@
         .filter(Boolean);
     }
 
-    function toDataUrlPayload(dataUrl){
-      return dataUrl || "";
-    }
-
     async function api(url, options = {}){
       const headers = {};
       if (!(options.body instanceof FormData)) {
         headers["Content-Type"] = "application/json";
       }
-
-      const res = await fetch(url, {
-        headers,
-        ...options
-      });
+      const res = await fetch(url, { headers, ...options });
       return res.json();
     }
 
@@ -1035,6 +1039,21 @@
     function nextLayerZ(){
       if (!sceneLayers.length) return 0;
       return Math.max(...sceneLayers.map(x => Number(x.z || 0))) + 10;
+    }
+
+    function sortSceneLayers(){
+      sceneLayers.sort((a,b) => Number(a.z || 0) - Number(b.z || 0));
+    }
+
+    function getSelectedLayer(){
+      return sceneLayers.find(x => x.layer_id === selectedLayerId) || null;
+    }
+
+    function canvasSize(){
+      return {
+        width: Number(el("sceneCanvasW").value || 1280),
+        height: Number(el("sceneCanvasH").value || 720)
+      };
     }
 
     document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -1056,12 +1075,9 @@
         return;
       }
 
-      selectedImageMime = file.type || "image/png";
-
       const reader = new FileReader();
       reader.onload = e => {
-        const dataUrl = e.target?.result || "";
-        selectedImageBase64 = String(dataUrl);
+        selectedImageBase64 = String(e.target?.result || "");
         el("thumbPreview").src = selectedImageBase64;
         el("thumbPreview").style.display = "block";
         el("thumbPlaceholder").style.display = "none";
@@ -1077,12 +1093,11 @@
       el("assetNotes").value = "";
       el("assetPreferred").checked = false;
       selectedImageBase64 = "";
-      selectedImageMime = "image/png";
       el("thumbPreview").style.display = "none";
       el("thumbPreview").src = "";
       el("thumbPlaceholder").style.display = "block";
-      setMsg("assetCreateMessage", "");
       editingAssetId = "";
+      setMsg("assetCreateMessage", "");
     }
 
     async function createManualAsset(){
@@ -1109,7 +1124,7 @@
         preferred,
         notes,
         source: "manual",
-        image_base64: toDataUrlPayload(selectedImageBase64)
+        image_base64: selectedImageBase64
       };
 
       const data = await api("/assets/create", {
@@ -1139,7 +1154,6 @@
       populateAssetSelect(items);
 
       const root = el("assetsGrid");
-
       if (!items.length){
         root.innerHTML = `<div class="small">Henüz asset yok</div>`;
         return;
@@ -1181,13 +1195,14 @@
         const id = esc(item.asset_id || "");
         return `<option value="${id}">${label}</option>`;
       }).join("");
-      sel.value = current;
+      if ([...sel.options].some(o => o.value === current)) {
+        sel.value = current;
+      }
     }
 
     async function loadAssetStats(){
       const data = await api("/assets/stats");
       el("assetStatsBox").textContent = pretty(data);
-
       el("statTotalAssets").textContent = data.total_assets ?? 0;
       el("statPreferred").textContent = data.preferred_assets ?? 0;
       el("statUsed").textContent = data.total_used_count ?? 0;
@@ -1212,15 +1227,13 @@
       el("assetInterestsTr").value = (item.interests_tr || []).join(", ");
       el("assetNotes").value = item.notes || "";
       el("assetPreferred").checked = !!item.preferred;
-
       if (item.image_path){
         el("thumbPreview").src = item.image_path;
         el("thumbPreview").style.display = "block";
         el("thumbPlaceholder").style.display = "none";
       }
-
-      setMsg("assetCreateMessage", `Düzenlemek için asset seçildi: ${assetId}`, true);
       editingAssetId = assetId;
+      setMsg("assetCreateMessage", `Düzenlemek için asset seçildi: ${assetId}`, true);
     }
 
     async function saveEditedAsset(){
@@ -1247,12 +1260,13 @@
         return;
       }
 
-      setMsg("assetCreateMessage", "Asset güncellendi", true);
       editingAssetId = "";
+      setMsg("assetCreateMessage", "Asset güncellendi", true);
       await refreshAssetArea();
     }
 
     function buildScenePayloadFromEditor(){
+      sortSceneLayers();
       return {
         scene_id: editingSceneId || undefined,
         name: el("sceneName").value.trim(),
@@ -1264,7 +1278,7 @@
           height: Number(el("sceneCanvasH").value || 720),
           background: el("sceneCanvasBg").value.trim() || "#ffffff",
         },
-        layers: sceneLayers.slice().sort((a, b) => Number(a.z || 0) - Number(b.z || 0))
+        layers: sceneLayers.slice()
       };
     }
 
@@ -1286,6 +1300,7 @@
     }
 
     function resetLayerForm(){
+      selectedLayerId = "";
       el("layerType").value = "background";
       el("layerName").value = "";
       el("layerAssetSelect").value = "";
@@ -1299,7 +1314,25 @@
       el("layerFontSize").value = "42";
       el("layerColor").value = "#111111";
       el("layerVisible").checked = true;
-      selectedLayerId = "";
+      renderLayerList();
+      renderSceneCanvas();
+    }
+
+    function fillLayerForm(layer){
+      if (!layer) return;
+      el("layerType").value = layer.type || "image";
+      el("layerName").value = layer.name || "";
+      el("layerAssetSelect").value = layer.asset_id || "";
+      el("layerText").value = layer.text || "";
+      el("layerX").value = String(layer.x ?? 0);
+      el("layerY").value = String(layer.y ?? 0);
+      el("layerW").value = String(layer.w ?? 200);
+      el("layerH").value = String(layer.h ?? 200);
+      el("layerZ").value = String(layer.z ?? 0);
+      el("layerOpacity").value = String(layer.opacity ?? 1);
+      el("layerFontSize").value = String(layer.font_size ?? 42);
+      el("layerColor").value = layer.color || "#111111";
+      el("layerVisible").checked = !!layer.visible;
     }
 
     function addLayerToScene(){
@@ -1334,7 +1367,7 @@
       if (["background","image","avatar","decor"].includes(type)){
         layer.asset_id = assetId;
         layer.src = getAssetImage(assetId);
-        layer.fit = "contain";
+        layer.fit = type === "background" ? "cover" : "contain";
       }
 
       if (type === "text" || type === "guide"){
@@ -1346,45 +1379,26 @@
       }
 
       sceneLayers.push(layer);
-      sceneLayers.sort((a,b) => Number(a.z || 0) - Number(b.z || 0));
+      sortSceneLayers();
+      selectedLayerId = layer.layer_id;
+      fillLayerForm(layer);
       renderSceneCanvas();
       renderLayerList();
-      resetLayerForm();
       setMsg("sceneMessage", "Katman eklendi", true);
     }
 
     function selectLayer(layerId){
       selectedLayerId = layerId;
-      const layer = sceneLayers.find(x => x.layer_id === layerId);
-      if (!layer) return;
-
-      el("layerType").value = layer.type || "image";
-      el("layerName").value = layer.name || "";
-      el("layerAssetSelect").value = layer.asset_id || "";
-      el("layerText").value = layer.text || "";
-      el("layerX").value = String(layer.x ?? 0);
-      el("layerY").value = String(layer.y ?? 0);
-      el("layerW").value = String(layer.w ?? 200);
-      el("layerH").value = String(layer.h ?? 200);
-      el("layerZ").value = String(layer.z ?? 0);
-      el("layerOpacity").value = String(layer.opacity ?? 1);
-      el("layerFontSize").value = String(layer.font_size ?? 42);
-      el("layerColor").value = layer.color || "#111111";
-      el("layerVisible").checked = !!layer.visible;
-
+      const layer = getSelectedLayer();
+      fillLayerForm(layer);
       renderSceneCanvas();
       renderLayerList();
     }
 
     function updateSelectedLayer(){
-      if (!selectedLayerId){
+      const layer = getSelectedLayer();
+      if (!layer){
         setMsg("sceneMessage", "Önce katman seç", false);
-        return;
-      }
-
-      const idx = sceneLayers.findIndex(x => x.layer_id === selectedLayerId);
-      if (idx < 0){
-        setMsg("sceneMessage", "Katman bulunamadı", false);
         return;
       }
 
@@ -1392,48 +1406,42 @@
       const assetId = el("layerAssetSelect").value;
       const text = el("layerText").value.trim();
 
-      const layer = {
-        ...sceneLayers[idx],
-        name: el("layerName").value.trim() || sceneLayers[idx].name,
-        type,
-        x: Number(el("layerX").value || 0),
-        y: Number(el("layerY").value || 0),
-        w: Number(el("layerW").value || 200),
-        h: Number(el("layerH").value || 200),
-        z: Number(el("layerZ").value || 0),
-        opacity: Number(el("layerOpacity").value || 1),
-        visible: !!el("layerVisible").checked
-      };
+      if (["background","image","avatar","decor"].includes(type) && !assetId){
+        setMsg("sceneMessage", "Bu katman türü için asset seçmelisin", false);
+        return;
+      }
+
+      if (["text","guide"].includes(type) && !text){
+        setMsg("sceneMessage", "Metin katmanı için yazı gerekli", false);
+        return;
+      }
+
+      layer.name = el("layerName").value.trim() || layer.name;
+      layer.type = type;
+      layer.x = Number(el("layerX").value || 0);
+      layer.y = Number(el("layerY").value || 0);
+      layer.w = Number(el("layerW").value || 200);
+      layer.h = Number(el("layerH").value || 200);
+      layer.z = Number(el("layerZ").value || 0);
+      layer.opacity = Number(el("layerOpacity").value || 1);
+      layer.visible = !!el("layerVisible").checked;
 
       if (["background","image","avatar","decor"].includes(type)){
-        if (!assetId){
-          setMsg("sceneMessage", "Bu katman türü için asset seçmelisin", false);
-          return;
-        }
         layer.asset_id = assetId;
         layer.src = getAssetImage(assetId);
+        layer.fit = type === "background" ? "cover" : "contain";
+        delete layer.text;
       } else {
         delete layer.asset_id;
         delete layer.src;
-      }
-
-      if (type === "text" || type === "guide"){
-        if (!text){
-          setMsg("sceneMessage", "Metin katmanı için yazı gerekli", false);
-          return;
-        }
         layer.text = text;
         layer.font_size = Number(el("layerFontSize").value || 42);
         layer.color = el("layerColor").value.trim() || "#111111";
         layer.font_weight = type === "guide" ? "600" : "700";
-      } else {
-        delete layer.text;
-        delete layer.font_size;
-        delete layer.color;
       }
 
-      sceneLayers[idx] = layer;
-      sceneLayers.sort((a,b) => Number(a.z || 0) - Number(b.z || 0));
+      sortSceneLayers();
+      fillLayerForm(layer);
       renderSceneCanvas();
       renderLayerList();
       setMsg("sceneMessage", "Katman güncellendi", true);
@@ -1453,6 +1461,104 @@
       setMsg("sceneMessage", "Katman silindi", true);
     }
 
+    function bringSelectedToFront(){
+      const layer = getSelectedLayer();
+      if (!layer) return;
+      const maxZ = sceneLayers.length ? Math.max(...sceneLayers.map(x => Number(x.z || 0))) : 0;
+      layer.z = maxZ + 10;
+      el("layerZ").value = String(layer.z);
+      sortSceneLayers();
+      renderSceneCanvas();
+      renderLayerList();
+    }
+
+    function sendSelectedToBack(){
+      const layer = getSelectedLayer();
+      if (!layer) return;
+      const minZ = sceneLayers.length ? Math.min(...sceneLayers.map(x => Number(x.z || 0))) : 0;
+      layer.z = minZ - 10;
+      el("layerZ").value = String(layer.z);
+      sortSceneLayers();
+      renderSceneCanvas();
+      renderLayerList();
+    }
+
+    function moveSelectedToMiddle(){
+      const layer = getSelectedLayer();
+      if (!layer) return;
+      const zs = sceneLayers.map(x => Number(x.z || 0)).sort((a,b) => a - b);
+      if (!zs.length) return;
+      layer.z = Math.round((zs[0] + zs[zs.length - 1]) / 2);
+      el("layerZ").value = String(layer.z);
+      sortSceneLayers();
+      renderSceneCanvas();
+      renderLayerList();
+    }
+
+    function centerSelectedOnCanvas(){
+      const layer = getSelectedLayer();
+      if (!layer) return;
+      const size = canvasSize();
+      layer.x = Math.round((size.width - Number(layer.w || 0)) / 2);
+      layer.y = Math.round((size.height - Number(layer.h || 0)) / 2);
+      el("layerX").value = String(layer.x);
+      el("layerY").value = String(layer.y);
+      renderSceneCanvas();
+      renderLayerList();
+    }
+
+    function startLayerDrag(event, layerId){
+      event.preventDefault();
+      event.stopPropagation();
+
+      selectLayer(layerId);
+
+      const layer = getSelectedLayer();
+      if (!layer) return;
+
+      dragState.active = true;
+      dragState.layerId = layerId;
+      dragState.startMouseX = event.clientX;
+      dragState.startMouseY = event.clientY;
+      dragState.startX = Number(layer.x || 0);
+      dragState.startY = Number(layer.y || 0);
+    }
+
+    function onGlobalMouseMove(event){
+      if (!dragState.active) return;
+
+      const layer = sceneLayers.find(x => x.layer_id === dragState.layerId);
+      if (!layer) return;
+
+      const canvas = el("sceneCanvas");
+      const rect = canvas.getBoundingClientRect();
+      const size = canvasSize();
+
+      const dxPx = event.clientX - dragState.startMouseX;
+      const dyPx = event.clientY - dragState.startMouseY;
+
+      const dx = Math.round((dxPx / rect.width) * size.width);
+      const dy = Math.round((dyPx / rect.height) * size.height);
+
+      layer.x = dragState.startX + dx;
+      layer.y = dragState.startY + dy;
+
+      el("layerX").value = String(layer.x);
+      el("layerY").value = String(layer.y);
+
+      renderSceneCanvas();
+      renderLayerList();
+    }
+
+    function onGlobalMouseUp(){
+      if (!dragState.active) return;
+      dragState.active = false;
+      dragState.layerId = "";
+    }
+
+    document.addEventListener("mousemove", onGlobalMouseMove);
+    document.addEventListener("mouseup", onGlobalMouseUp);
+
     function renderSceneCanvas(){
       const root = el("sceneCanvas");
       const w = Number(el("sceneCanvasW").value || 1280);
@@ -1462,9 +1568,9 @@
       root.style.background = bg;
       root.innerHTML = "";
 
-      const layers = sceneLayers.slice().sort((a,b) => Number(a.z || 0) - Number(b.z || 0));
+      sortSceneLayers();
 
-      layers.forEach(layer => {
+      sceneLayers.forEach(layer => {
         if (!layer.visible) return;
 
         const node = document.createElement("div");
@@ -1483,21 +1589,30 @@
         if (layer.type === "text" || layer.type === "guide"){
           node.textContent = layer.text || "";
           node.style.color = layer.color || "#111111";
-          node.style.fontSize = Math.max(12, Number(layer.font_size || 42) * 0.45) + "px";
+          node.style.fontSize = Math.max(12, Number(layer.font_size || 42) * 0.42) + "px";
           node.style.fontWeight = layer.font_weight || "700";
-          node.style.pointerEvents = "auto";
         } else {
           const img = document.createElement("img");
           img.src = layer.src || getAssetImage(layer.asset_id || "");
           img.alt = layer.name || layer.type || "";
           img.style.objectFit = layer.type === "background" ? "cover" : "contain";
           node.appendChild(img);
-          node.style.pointerEvents = "auto";
         }
 
-        node.onclick = () => selectLayer(layer.layer_id);
+        node.addEventListener("mousedown", (event) => startLayerDrag(event, layer.layer_id));
+        node.addEventListener("click", (event) => {
+          event.stopPropagation();
+          selectLayer(layer.layer_id);
+        });
+
         root.appendChild(node);
       });
+
+      root.onclick = () => {
+        selectedLayerId = "";
+        renderSceneCanvas();
+        renderLayerList();
+      };
     }
 
     function renderLayerList(){
@@ -1507,8 +1622,8 @@
         return;
       }
 
-      const layers = sceneLayers.slice().sort((a,b) => Number(a.z || 0) - Number(b.z || 0));
-      root.innerHTML = layers.map(layer => `
+      sortSceneLayers();
+      root.innerHTML = sceneLayers.map(layer => `
         <div class="layer-item ${layer.layer_id === selectedLayerId ? "active" : ""}" onclick="selectLayer('${esc(layer.layer_id)}')">
           <div class="top">
             <strong>${esc(layer.name || "Katman")}</strong>
@@ -1616,6 +1731,7 @@
       el("sceneCanvasBg").value = item.canvas?.background || "#ffffff";
       sceneLayers = Array.isArray(item.layers) ? item.layers.slice() : [];
       selectedLayerId = "";
+      resetLayerForm();
       renderSceneCanvas();
       renderLayerList();
       document.querySelector('[data-tab="sceneTab"]').click();
