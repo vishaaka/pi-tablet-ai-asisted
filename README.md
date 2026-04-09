@@ -95,7 +95,7 @@ Görevler:
 * payload queue yönetimi
 * milestone / progress tracking
 
-## B) Raspberry Pi 5
+## B) Raspberry Pi 
 
 Çocuk tarafındaki hafif istemci.
 
