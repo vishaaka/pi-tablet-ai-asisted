@@ -64,7 +64,7 @@ def safe_get_json(url: str):
 def root():
     return {
         "panel": "ok",
-        "open": "http://127.0.0.1:9100/panel",
+        "open": "http://127.0.0.1:7000/panel",
         "mode": get_mode(),
     }
 
@@ -110,6 +110,15 @@ def set_game(payload: dict):
         "set_screen",
         {"screen": "interactive_game", **payload},
     )
+
+
+@app.post("/screen/layered_scene")
+def screen_layered_scene(payload: dict):
+    try:
+        built = build_scene_payload(payload)
+        return push_command("set_screen", built)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
 
 
 @app.post("/session/shutdown_after")
@@ -326,6 +335,7 @@ def assets_stats():
 def assets_history(limit: int = 100):
     return {"items": list_asset_history(limit=limit)}
 
+
 # ---- Katmanlı Sahne Editörü ----
 
 @app.get("/scenes/list")
@@ -382,14 +392,6 @@ def scenes_stats():
     return scene_stats()
 
 
-@app.post("/screen/layered_scene")
-def screen_layered_scene(payload: dict):
-    try:
-        built = build_scene_payload(payload)
-        return push_command("set_screen", built)
-    except Exception as e:
-        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
-
 # ---- Panel için proxy endpointler ----
 
 @app.get("/panel/api/summary")
@@ -405,3 +407,8 @@ def panel_api_milestones():
 @app.get("/panel/api/ai_decision")
 def panel_api_ai_decision():
     return safe_get_json("http://127.0.0.1:8000/ai_decision")
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("parent_panel:app", host="0.0.0.0", port=7000, reload=False)
