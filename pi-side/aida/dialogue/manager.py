@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Any
 
 from aida.core.router import Router
 from aida.core.session import AidaSession
@@ -30,26 +30,40 @@ class DialogueManager:
 
         if "ses" in normalized and ("kıs" in normalized or "azalt" in normalized):
             return "Tamam. Ses biraz azaltılabilir."
+
         if "ses" in normalized and ("aç" in normalized or "artır" in normalized):
             return "Tamam. Ses artırılabilir."
+
         if "kapat" in normalized:
             return "Tamam. Bu işlem ebeveyn komutu olarak işaretlendi."
-        if "süre" in normalized:
+
+        if "süre" in normalized or "limit" in normalized:
             return "Tamam. Süre ayarı ebeveyn modunda değiştirilebilir."
 
         return "Ebeveyn komutu alındı."
 
-    def _delegate_to_pc(self, text: str) -> str:
+    def _delegate_to_pc(self, text: str, session: AidaSession) -> str:
         if self.pc_bridge is None:
             return "Bu isteği daha güçlü zekâya gönderebilirim ama bağlantı şu an hazır değil."
-        return self.pc_bridge.ask(text)
+
+        return self.pc_bridge.ask(
+            text=text,
+            role=session.active_user_role,
+            mode=session.current_mode,
+        )
 
     def process(self, text: str, session: AidaSession) -> ResponseObject:
         session.set_state(self.state_machine.transition("listening"))
         session.set_state(self.state_machine.transition("thinking"))
 
-        intent_result = classify_intent(text, current_role=session.active_user_role)
-        decision = self.router.decide(intent_result.intent, session.active_user_role)
+        intent_result = classify_intent(
+            text=text,
+            current_role=session.active_user_role,
+        )
+        decision = self.router.decide(
+            intent=intent_result.intent,
+            role=session.active_user_role,
+        )
 
         if decision.route == "template":
             response_text = choose_template(decision.template_key or "unknown")
@@ -60,7 +74,7 @@ class DialogueManager:
             emotion = "neutral"
 
         elif decision.route == "delegate":
-            response_text = self._delegate_to_pc(text)
+            response_text = self._delegate_to_pc(text, session)
             emotion = "thinking"
 
         else:
