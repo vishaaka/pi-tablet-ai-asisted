@@ -1,49 +1,43 @@
 import json
 import os
-from datetime import datetime
-from typing import Any
+from copy import deepcopy
 
-HISTORY_PATH = "data/asset_history.jsonl"
-
-
-def ensure_asset_history() -> None:
-    os.makedirs("data", exist_ok=True)
-    if not os.path.exists(HISTORY_PATH):
-        with open(HISTORY_PATH, "w", encoding="utf-8") as f:
-            f.write("")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+DB_PATH = os.path.join(DATA_DIR, "db.json")
 
 
-def append_asset_history(action: str, asset_id: str, payload: dict[str, Any] | None = None) -> dict[str, Any]:
-    ensure_asset_history()
+def _read_db():
+    if not os.path.exists(DB_PATH):
+        return {"assets": []}
 
-    item = {
-        "timestamp": datetime.now().isoformat(),
-        "action": action,
-        "asset_id": asset_id,
-        "payload": payload or {},
-    }
-
-    with open(HISTORY_PATH, "a", encoding="utf-8") as f:
-        f.write(json.dumps(item, ensure_ascii=False) + "\n")
-
-    return item
+    try:
+        with open(DB_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if not isinstance(data, dict):
+                return {"assets": []}
+            data.setdefault("assets", [])
+            return data
+    except Exception:
+        return {"assets": []}
 
 
-def list_asset_history(limit: int = 100) -> list[dict[str, Any]]:
-    ensure_asset_history()
+def list_asset_history(limit: int = 100):
+    """
+    Ayrı history dosyası yerine db.json içindeki assetleri
+    updated_at / created_at bazlı geçmiş gibi gösterir.
+    """
+    assets = deepcopy(_read_db().get("assets", []))
 
-    items: list[dict[str, Any]] = []
-    with open(HISTORY_PATH, "r", encoding="utf-8") as f:
-        for line in f:
-            raw = line.strip()
-            if not raw:
-                continue
-            try:
-                data = json.loads(raw)
-                if isinstance(data, dict):
-                    items.append(data)
-            except Exception:
-                continue
+    for item in assets:
+        item["label_tr"] = item.get("label_tr") or item.get("label") or ""
+        item["image_path"] = item.get("image_path", "")
+        item["used_count"] = int(item.get("used_count", 0) or 0)
+        item["preferred"] = bool(item.get("preferred", False))
 
-    items.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
-    return items[:limit]
+    assets.sort(
+        key=lambda x: x.get("updated_at") or x.get("created_at") or "",
+        reverse=True
+    )
+
+    return assets[:limit]

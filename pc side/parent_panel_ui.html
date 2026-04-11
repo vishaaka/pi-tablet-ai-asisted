@@ -730,7 +730,7 @@
           <div id="assetStatsBox" class="queue-box mono">Yükleniyor...</div>
 
           <h3 style="margin-top:18px;">Asset Geçmişi</h3>
-          <div id="assetHistoryBox" class="history-box mono">Yükleniyor...</div>
+          <div id="assetHistoryBox" class="history-box"></div>
         </div>
       </div>
 
@@ -1018,6 +1018,34 @@
         .filter(Boolean);
     }
 
+    function normalizeAssetPath(path){
+      if (!path) return "";
+      path = String(path).replaceAll("\\", "/");
+      if (path.startsWith("/asset_files/")) return path;
+      if (path.startsWith("assets/")) return "/asset_files/" + path.replace(/^assets\//, "");
+      if (path.startsWith("/assets/")) return "/asset_files/" + path.replace(/^\/assets\//, "");
+      return path;
+    }
+
+    function formatHistoryDate(value){
+      if (!value) return "-";
+
+      const d = new Date(value);
+      if (isNaN(d.getTime())){
+        return String(value)
+          .replace("T", " ")
+          .replace(/\.\d+$/, "");
+      }
+
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mi = String(d.getMinutes()).padStart(2, "0");
+
+      return `${dd}-${mm}-${yyyy} ${hh}:${mi}`;
+    }
+
     async function api(url, options = {}){
       const headers = {};
       if (!(options.body instanceof FormData)) {
@@ -1033,7 +1061,8 @@
 
     function getAssetImage(assetId){
       const asset = findAssetById(assetId);
-      return asset ? (asset.image_path || asset.thumb_path || "") : "";
+      if (!asset) return "";
+      return normalizeAssetPath(asset.image_path || asset.thumb_path || "");
     }
 
     function nextLayerZ(){
@@ -1163,7 +1192,7 @@
         const tags = (item.tags_tr || []).map(x => `<span class="chip">${esc(x)}</span>`).join("");
         const interests = (item.interests_tr || []).map(x => `<span class="chip">${esc(x)}</span>`).join("");
         const pref = item.preferred ? `<span class="chip">preferred</span>` : "";
-        const image = esc(item.image_path || item.thumb_path || "");
+        const image = esc(normalizeAssetPath(item.image_path || item.thumb_path || ""));
         const labelTr = esc(item.label_tr || item.label || "");
         const notes = esc(item.notes || "");
         const id = esc(item.asset_id || "");
@@ -1211,7 +1240,27 @@
 
     async function loadAssetHistory(){
       const data = await api("/assets/history?limit=20");
-      el("assetHistoryBox").textContent = pretty(data.items || []);
+      const items = data.items || [];
+      const root = el("assetHistoryBox");
+
+      if (!items.length){
+        root.innerHTML = `<div class="small">Henüz geçmiş kaydı yok</div>`;
+        return;
+      }
+
+      root.innerHTML = items.map(item => {
+        const date = formatHistoryDate(item.updated_at || item.created_at || "");
+        const label = item.label_tr || item.label || "-";
+        const notes = item.notes || "";
+        const preferred = item.preferred ? " ★" : "";
+
+        return `
+          <div class="list-item">
+            ${esc(date)} &nbsp; <strong>${esc(label)}</strong>${preferred}
+            ${notes ? ` — ${esc(notes)}` : ""}
+          </div>
+        `;
+      }).join("");
     }
 
     async function fillAssetEdit(assetId){
@@ -1228,7 +1277,7 @@
       el("assetNotes").value = item.notes || "";
       el("assetPreferred").checked = !!item.preferred;
       if (item.image_path){
-        el("thumbPreview").src = item.image_path;
+        el("thumbPreview").src = normalizeAssetPath(item.image_path);
         el("thumbPreview").style.display = "block";
         el("thumbPlaceholder").style.display = "none";
       }
@@ -1593,7 +1642,7 @@
           node.style.fontWeight = layer.font_weight || "700";
         } else {
           const img = document.createElement("img");
-          img.src = layer.src || getAssetImage(layer.asset_id || "");
+          img.src = normalizeAssetPath(layer.src || getAssetImage(layer.asset_id || ""));
           img.alt = layer.name || layer.type || "";
           img.style.objectFit = layer.type === "background" ? "cover" : "contain";
           node.appendChild(img);

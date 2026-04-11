@@ -49,7 +49,9 @@ HTML_PATH = os.path.join(BASE_DIR, "parent_panel_ui.html")
 ASSETS_PATH = os.path.join(BASE_DIR, "assets")
 os.makedirs(ASSETS_PATH, exist_ok=True)
 
-app.mount("/assets", StaticFiles(directory=ASSETS_PATH), name="assets")
+# NOT:
+# /assets API endpointleri ile çakışmaması için statik mount yolu /asset_files yapıldı
+app.mount("/asset_files", StaticFiles(directory=ASSETS_PATH), name="asset_files")
 
 
 def safe_get_json(url: str):
@@ -411,4 +413,4 @@ def panel_api_ai_decision():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("parent_panel:app", host="0.0.0.0", port=7000, reload=False)
+    uvicorn.run("parent_panel:app", host="127.0.0.1", port=7000, reload=False)

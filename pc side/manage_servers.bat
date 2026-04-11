@@ -1,5 +1,5 @@
 @echo off
-setlocal enabledelayedexpansion
+setlocal EnableExtensions EnableDelayedExpansion
 
 cd /d C:\pitablet
 
@@ -97,50 +97,96 @@ goto :eof
 
 
 :start_service
-set SERVICE_NAME=%~1
-set SERVICE_PORT=%~2
-set SERVICE_CMD=%~3
+set "SERVICE_NAME=%~1"
+set "SERVICE_PORT=%~2"
+set "SERVICE_CMD=%~3"
 
-for /f "tokens=5" %%a in ('netstat -ano ^| findstr :%SERVICE_PORT% ^| findstr LISTENING') do (
-    echo %SERVICE_NAME% already running on port %SERVICE_PORT%
+call :collect_pids %SERVICE_PORT%
+if defined PID_LIST (
+    echo %SERVICE_NAME% already running on port %SERVICE_PORT% ^(PID(s): !PID_LIST!^)
     goto :eof
 )
 
 echo Starting %SERVICE_NAME% on port %SERVICE_PORT%...
 start "%SERVICE_NAME%" cmd /k "cd /d C:\pitablet && %SERVICE_CMD%"
 timeout /t 2 >nul
-echo %SERVICE_NAME% started
+
+call :collect_pids %SERVICE_PORT%
+if defined PID_LIST (
+    echo %SERVICE_NAME% started on port %SERVICE_PORT% ^(PID(s): !PID_LIST!^)
+) else (
+    echo %SERVICE_NAME% start command ran but port %SERVICE_PORT% is still not listening
+)
 goto :eof
 
 
 :stop_service
-set SERVICE_NAME=%~1
-set SERVICE_PORT=%~2
-set FOUND_PID=
+set "SERVICE_NAME=%~1"
+set "SERVICE_PORT=%~2"
 
-for /f "tokens=5" %%a in ('netstat -ano ^| findstr :%SERVICE_PORT% ^| findstr LISTENING') do (
-    set FOUND_PID=%%a
-)
-
-if not defined FOUND_PID (
+call :collect_pids %SERVICE_PORT%
+if not defined PID_LIST (
     echo %SERVICE_NAME% is not running
     goto :eof
 )
 
-echo Stopping %SERVICE_NAME% PID !FOUND_PID! ...
-taskkill /PID !FOUND_PID! /F >nul 2>nul
-echo %SERVICE_NAME% stopped
+echo Stopping %SERVICE_NAME% on port %SERVICE_PORT% ^(PID(s): !PID_LIST!^)
+
+for %%P in (!PID_LIST!) do (
+    taskkill /PID %%P /F >nul 2>nul
+)
+
+timeout /t 1 >nul
+
+call :collect_pids %SERVICE_PORT%
+if defined PID_LIST (
+    echo WARNING: %SERVICE_NAME% still appears to be running on port %SERVICE_PORT% ^(PID(s): !PID_LIST!^)
+) else (
+    echo %SERVICE_NAME% stopped
+)
 goto :eof
 
 
 :status_service
-set SERVICE_NAME=%~1
-set SERVICE_PORT=%~2
-for /f "tokens=5" %%a in ('netstat -ano ^| findstr :%SERVICE_PORT% ^| findstr LISTENING') do (
+set "SERVICE_NAME=%~1"
+set "SERVICE_PORT=%~2"
+
+call :collect_pids %SERVICE_PORT%
+if defined PID_LIST (
     echo %SERVICE_NAME%=running
-    goto :eof
+) else (
+    echo %SERVICE_NAME%=stopped
 )
-echo %SERVICE_NAME%=stopped
+goto :eof
+
+
+:collect_pids
+set "TARGET_PORT=%~1"
+set "PID_LIST="
+
+for /f "tokens=5" %%A in ('netstat -ano ^| findstr /R /C:":%TARGET_PORT% .*LISTENING"') do (
+    call :append_pid %%A
+)
+
+goto :eof
+
+
+:append_pid
+set "NEW_PID=%~1"
+if not defined NEW_PID goto :eof
+
+set "FOUND="
+for %%Z in (!PID_LIST!) do (
+    if "%%Z"=="%NEW_PID%" set "FOUND=1"
+)
+
+if not defined FOUND (
+    if defined PID_LIST (
+        set "PID_LIST=!PID_LIST! %NEW_PID%"
+    ) else (
+        set "PID_LIST=%NEW_PID%"
+    )
+)
 goto :eof
 
 

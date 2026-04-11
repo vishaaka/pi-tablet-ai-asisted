@@ -1,1 +1,75 @@
-{"speech": {"1": {"video_id": "test_video", "speech_attempt": true, "speech_level": "word", "response_time": 1.4, "target_word": "top", "child_output": "top", "success_level": "full_word", "phrase": "", "spontaneous": false, "timestamp": "2026-04-09T01:39:28.891372"}, "2": {"video_id": "test_video", "speech_attempt": true, "speech_level": "phrase", "response_time": 2.0, "target_word": "", "child_output": "", "success_level": "two_word_phrase", "phrase": "mavi top", "spontaneous": true, "timestamp": "2026-04-09T01:39:28.895681"}}}
+{
+  "speech": {
+    "1": {
+      "video_id": "test_video",
+      "speech_attempt": true,
+      "speech_level": "word",
+      "response_time": 1.4,
+      "target_word": "top",
+      "child_output": "top",
+      "success_level": "full_word",
+      "phrase": "",
+      "spontaneous": false,
+      "timestamp": "2026-04-09T01:39:28.891372"
+    },
+    "2": {
+      "video_id": "test_video",
+      "speech_attempt": true,
+      "speech_level": "phrase",
+      "response_time": 2.0,
+      "target_word": "",
+      "child_output": "",
+      "success_level": "two_word_phrase",
+      "phrase": "mavi top",
+      "spontaneous": true,
+      "timestamp": "2026-04-09T01:39:28.895681"
+    }
+  },
+  "assets": [
+    {
+      "asset_id": "ast_20260411_033413_e8596c",
+      "label_tr": "gökkuşağı",
+      "label_en": "gökkuşağı",
+      "tags_tr": [
+        "gökkuşağı"
+      ],
+      "tags_en": [],
+      "interests_tr": [
+        "hava"
+      ],
+      "interests_en": [],
+      "image_path": "/asset_files/gokkusagi_20260411_033413_446957.jpg",
+      "preferred": false,
+      "source": "manual",
+      "status": "active",
+      "created_at": "2026-04-11T03:34:13.447957",
+      "updated_at": "2026-04-11T03:34:13.447957",
+      "used_count": 0,
+      "last_used_at": "",
+      "notes": "deneme"
+    },
+    {
+      "asset_id": "ast_20260411_040951_107e2e",
+      "label_tr": "ağaç",
+      "label_en": "ağaç",
+      "tags_tr": [
+        "bitki",
+        "canlı"
+      ],
+      "tags_en": [],
+      "interests_tr": [
+        "bitki"
+      ],
+      "interests_en": [],
+      "image_path": "/asset_files/agac_20260411_040951_668937.jpg",
+      "preferred": false,
+      "source": "manual",
+      "status": "active",
+      "created_at": "2026-04-11T04:09:51.668937",
+      "updated_at": "2026-04-11T04:09:51.668937",
+      "used_count": 0,
+      "last_used_at": "",
+      "notes": "deneme ağaç"
+    }
+  ]
+}
