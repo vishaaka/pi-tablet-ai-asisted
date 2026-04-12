@@ -66,7 +66,7 @@ def safe_get_json(url: str):
 def root():
     return {
         "panel": "ok",
-        "open": "http://127.0.0.1:7000/panel",
+        "open": "http://127.0.0.1:9100/panel",
         "mode": get_mode(),
     }
 
@@ -413,4 +413,4 @@ def panel_api_ai_decision():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("parent_panel:app", host="127.0.0.1", port=7000, reload=False)
+    uvicorn.run("parent_panel:app", host="127.0.0.1", port=9100, reload=False)
