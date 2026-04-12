@@ -1,5 +1,5 @@
-import subprocess
 import socket
+import subprocess
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -12,13 +12,12 @@ DASHBOARD_PORT = 9000
 
 
 def _run_bat(*args):
-    cmd = [str(BAT_PATH), *args]
     result = subprocess.run(
-        cmd,
+        [str(BAT_PATH), *args],
         capture_output=True,
         text=True,
         shell=True,
-        cwd=str(BASE_DIR)
+        cwd=str(BASE_DIR),
     )
     return {
         "ok": result.returncode == 0,
@@ -49,7 +48,7 @@ def status_all():
             "middleware": MIDDLEWARE_PORT,
             "dashboard": DASHBOARD_PORT,
         },
-        "panel_url": f"http://127.0.0.1:{PANEL_PORT}/panel"
+        "panel_url": f"http://127.0.0.1:{PANEL_PORT}/panel",
     }
 
 
@@ -59,7 +58,7 @@ def start_all():
         "ok": result["ok"],
         "action": "start_all",
         "result": result,
-        "status": status_all()
+        "status": status_all(),
     }
 
 
@@ -69,7 +68,7 @@ def stop_all():
         "ok": result["ok"],
         "action": "stop_all",
         "result": result,
-        "status": status_all()
+        "status": status_all(),
     }
 
 
@@ -79,7 +78,7 @@ def stop_all_safe():
         "ok": result["ok"],
         "action": "stop_all_safe",
         "result": result,
-        "status": status_all()
+        "status": status_all(),
     }
 
 
@@ -89,7 +88,7 @@ def start_server(name: str):
         "ok": result["ok"],
         "action": f"start_{name}",
         "result": result,
-        "status": status_all()
+        "status": status_all(),
     }
 
 
@@ -99,5 +98,5 @@ def stop_server(name: str):
         "ok": result["ok"],
         "action": f"stop_{name}",
         "result": result,
-        "status": status_all()
+        "status": status_all(),
     }

@@ -16,6 +16,13 @@
       --danger:#ef4444;
       --shadow:0 10px 25px rgba(0,0,0,.25);
       --radius:18px;
+      --chip-bg:#0b1220;
+      --good-bg:#052e1b;
+      --good-line:#166534;
+      --bad-bg:#3f1111;
+      --bad-line:#7f1d1d;
+      --neutral-bg:#111827;
+      --neutral-line:#334155;
     }
 
     *{box-sizing:border-box}
@@ -494,6 +501,69 @@
       margin-top:10px;
     }
 
+    .status-wrap{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .status-badges{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .status-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:13px;
+      font-weight:600;
+      border:1px solid var(--neutral-line);
+      background:var(--neutral-bg);
+      color:var(--text);
+    }
+
+    .status-chip.good{
+      background:var(--good-bg);
+      border-color:var(--good-line);
+      color:#bbf7d0;
+    }
+
+    .status-chip.bad{
+      background:var(--bad-bg);
+      border-color:var(--bad-line);
+      color:#fecaca;
+    }
+
+    .status-meta{
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#0b1220;
+      padding:10px 12px;
+      color:#cbd5e1;
+      line-height:1.6;
+      font-size:13px;
+    }
+
+    .autonomy-wrap{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .autonomy-line{
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#0b1220;
+      padding:10px 12px;
+      color:#cbd5e1;
+      line-height:1.6;
+      font-size:13px;
+    }
+
     @media (max-width:1300px){
       .grid-3{grid-template-columns:1fr}
     }
@@ -957,7 +1027,9 @@
 
         <div class="panel">
           <h2>Sunucu Durumları</h2>
-          <div id="serverStatusBox" class="queue-box mono">Yükleniyor...</div>
+          <div id="serverStatusBox" class="status-wrap">
+            <div class="small">Yükleniyor...</div>
+          </div>
 
           <h3 style="margin-top:18px;">Otonom Seans</h3>
           <div class="actions">
@@ -966,7 +1038,9 @@
             <button class="danger" onclick="stopAutonomy()">Seansı Durdur</button>
           </div>
 
-          <div id="autonomyStateBox" class="queue-box mono" style="margin-top:12px;">Yükleniyor...</div>
+          <div id="autonomyStateBox" class="autonomy-wrap" style="margin-top:12px;">
+            <div class="small">Yükleniyor...</div>
+          </div>
         </div>
       </div>
     </section>
@@ -1044,6 +1118,89 @@
       const mi = String(d.getMinutes()).padStart(2, "0");
 
       return `${dd}-${mm}-${yyyy} ${hh}:${mi}`;
+    }
+
+    function statusChip(label, isOn) {
+      return `<span class="status-chip ${isOn ? "good" : "bad"}">${esc(label)}: ${isOn ? "Çalışıyor" : "Kapalı"}</span>`;
+    }
+
+    function formatServerStatus(data) {
+      const chips = `
+        <div class="status-badges">
+          ${statusChip("Panel", !!data.panel)}
+          ${statusChip("Tool", !!data.tool)}
+          ${statusChip("Middleware", !!data.middleware)}
+          ${statusChip("Dashboard", !!data.dashboard)}
+        </div>
+      `;
+
+      const metaLines = [];
+
+      if (data.ports) {
+        metaLines.push(
+          `Portlar: panel=${data.ports.panel}, tool=${data.ports.tool}, middleware=${data.ports.middleware}, dashboard=${data.ports.dashboard}`
+        );
+      }
+
+      if (data.panel_url) {
+        metaLines.push(`Panel URL: ${esc(data.panel_url)}`);
+      }
+
+      if (data.mode) {
+        metaLines.push(`Mod: ${esc(data.mode)}`);
+      }
+
+      if (data.manual_asset_mode !== undefined) {
+        metaLines.push(`Manual Asset Modu: ${data.manual_asset_mode ? "Açık" : "Kapalı"}`);
+      }
+
+      return `
+        ${chips}
+        <div class="status-meta">${metaLines.join("<br>")}</div>
+      `;
+    }
+
+    function formatAutonomySession(data) {
+      const running = !!data.running;
+
+      const chips = `
+        <div class="status-badges">
+          <span class="status-chip ${running ? "good" : "bad"}">Durum: ${running ? "Aktif" : "Pasif"}</span>
+          <span class="status-chip">Zorluk: ${esc(data.difficulty ?? 1)}</span>
+          <span class="status-chip">Tekrar: ${esc(data.repeat_count ?? 0)}</span>
+        </div>
+      `;
+
+      const lines = [];
+
+      if (data.session_id) {
+        lines.push(`Seans ID: ${esc(data.session_id)}`);
+      }
+
+      if (data.last_target_word_tr) {
+        lines.push(`Son hedef: ${esc(data.last_target_word_tr)}`);
+      }
+
+      if (data.last_interest_tr) {
+        lines.push(`Son ilgi: ${esc(data.last_interest_tr)}`);
+      }
+
+      if (data.last_reason) {
+        lines.push(`Sebep: ${esc(data.last_reason)}`);
+      }
+
+      if (Array.isArray(data.recent_targets) && data.recent_targets.length) {
+        lines.push(`Yakın hedefler: ${esc(data.recent_targets.join(", "))}`);
+      }
+
+      if (!lines.length) {
+        lines.push("Aktif seans bilgisi yok.");
+      }
+
+      return `
+        ${chips}
+        <div class="autonomy-line">${lines.join("<br>")}</div>
+      `;
     }
 
     async function api(url, options = {}){
@@ -1971,7 +2128,10 @@
     async function loadServerStatus(){
       const data = await api("/server/status");
       el("serverStatusText").textContent = data.error ? "Sunucu hatası" : "Sunucu aktif";
-      el("serverStatusBox").textContent = pretty(data);
+      el("serverStatusBox").innerHTML = data.error
+        ? `<div class="small">Sunucu durumu alınamadı</div>`
+        : formatServerStatus(data);
+
       if (data.mode){
         el("modeSelect").value = data.mode;
       }
@@ -2029,7 +2189,9 @@
 
     async function loadAutonomyState(){
       const data = await api("/autonomy/session/state");
-      el("autonomyStateBox").textContent = pretty(data);
+      el("autonomyStateBox").innerHTML = data.error
+        ? `<div class="small">Otonom seans bilgisi alınamadı</div>`
+        : formatAutonomySession(data);
     }
 
     async function refreshAssetArea(){
