@@ -184,10 +184,35 @@ README ile uyumlu sade PC-side omurgası aşağıdaki dosyalar etrafında tutula
 * `pc side/services/dashboard.py` — milestone ve özet verileri
 * `pc side/storage/db.py`, `storage/speech.py`, `core/milestone_engine.py` — temel veri ve analiz katmanı
 * `pc side/config/settings.json` — port, yol, model ve API ayarları için merkezî dosya
+* `pc side/setup_pitablet.ps1` + `setup_pitablet.bat` — bu çalışma klasöründen `C:\pitablet` canlı kurulumuna güvenli aktarım
 * `pc side/data/` — çalışan sistemin runtime verileri
 * `pc side/assets/` — kayıtlı görseller
 
 Bu çekirdek dışında kalan kopya klasörler, bozuk eski importer scriptleri ve kullanılmayan legacy yardımcılar mümkün olduğunca repodan temiz tutulacaktır.
+
+## Deployment Akışı
+
+PC-side çalışma klasörü kaynak paket olarak korunur.
+
+Makinede canlı çalışan kurulum hedefi:
+
+* `C:\pitablet`
+
+Yedek hedefi:
+
+* `C:\pitablet_backups`
+
+Kurulum / senkron komutları:
+
+* `pc side\setup_pitablet.bat`
+* `pc side\setup_pitablet.ps1 -InstallRequirements`
+
+Bu akışın amacı:
+
+* mevcut workspace'i bozmadan canlı klasöre aktarım yapmak
+* `C:\pitablet` içeriğini aktarım öncesi yedeklemek
+* acil durumda eski çalışan kurulumlara hızlı dönebilmek
+* farklı bilgisayarda aynı paket yapısını kolay taşımak
 
 ### `pc side/storage/asset_manager.py`
 

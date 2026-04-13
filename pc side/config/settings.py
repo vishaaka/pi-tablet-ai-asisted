@@ -86,6 +86,13 @@ DEFAULT_SETTINGS: dict[str, Any] = {
             "fallback_interest": "oyuncak",
         }
     },
+    "deployment": {
+        "package_name": "pi-side",
+        "target_dir": "C:\\pitablet",
+        "backup_root": "C:\\pitablet_backups",
+        "exclude_dirs": ["__pycache__", ".git", ".venv", "venv"],
+        "exclude_files": ["*.pyc", "*.pyo"],
+    },
 }
 
 
@@ -150,3 +157,7 @@ def service_url(name: str, path: str = "") -> str:
     service = service_settings(name)
     suffix = path if path.startswith("/") or not path else f"/{path}"
     return f"http://{service['host']}:{service['port']}{suffix}"
+
+
+def deployment_settings() -> dict[str, Any]:
+    return deepcopy(get_settings()["deployment"])

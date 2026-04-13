@@ -134,18 +134,35 @@
 
     .grid-2{
       display:grid;
-      grid-template-columns:1.05fr .95fr;
+      grid-template-columns:minmax(0,1.08fr) minmax(340px,.92fr);
       gap:18px;
+      align-items:start;
+    }
+
+    .grid-2 > .panel{
+      min-width:0;
+    }
+
+    .balanced-layout{
+      grid-template-columns:minmax(0,1fr) minmax(360px,1fr);
+    }
+
+    .asset-layout{
+      grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);
+    }
+
+    .pi-layout{
+      grid-template-columns:minmax(360px,.95fr) minmax(0,1.05fr);
     }
 
     .grid-3{
       display:grid;
-      grid-template-columns:360px 1fr 360px;
       gap:18px;
       align-items:start;
     }
 
     .scene-layout{
+      grid-template-columns:minmax(320px,360px) minmax(0,1fr) minmax(300px,360px);
       grid-template-areas:"form preview side";
     }
 
@@ -155,7 +172,11 @@
       display:flex;
       flex-direction:column;
     }
-    .scene-side-panel{grid-area:side}
+    .scene-side-panel{
+      grid-area:side;
+      display:flex;
+      flex-direction:column;
+    }
 
     .grid-3 > .panel{
       min-width:0;
@@ -212,6 +233,44 @@
     .field textarea{
       resize:vertical;
       min-height:88px;
+    }
+
+    .color-field{
+      position:relative;
+    }
+
+    .color-field input[type="text"]{
+      padding-right:56px;
+      text-transform:uppercase;
+    }
+
+    .color-picker{
+      position:absolute;
+      top:50%;
+      right:8px;
+      width:34px;
+      height:34px;
+      transform:translateY(-50%);
+      border:1px solid var(--line);
+      border-radius:10px;
+      background:#0b1220;
+      padding:0;
+      cursor:pointer;
+      overflow:hidden;
+    }
+
+    .color-picker::-webkit-color-swatch-wrapper{
+      padding:0;
+    }
+
+    .color-picker::-webkit-color-swatch{
+      border:0;
+      border-radius:8px;
+    }
+
+    .color-picker::-moz-color-swatch{
+      border:0;
+      border-radius:8px;
     }
 
     .check{
@@ -390,8 +449,131 @@
       border:1px solid var(--line);
       border-radius:14px;
       padding:12px;
-      min-height:120px;
+      min-height:140px;
       overflow:auto;
+    }
+
+    .data-stack{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .data-card{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#111827;
+      padding:12px;
+    }
+
+    .data-card-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+
+    .data-card-title{
+      font-size:15px;
+      font-weight:700;
+      color:#f8fafc;
+    }
+
+    .data-card-foot{
+      margin-top:10px;
+      color:#cbd5e1;
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .kv-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .kv-row{
+      display:grid;
+      grid-template-columns:minmax(108px,132px) 1fr;
+      gap:12px;
+      align-items:start;
+      padding-top:8px;
+      border-top:1px solid rgba(148,163,184,.14);
+    }
+
+    .kv-row:first-child{
+      border-top:0;
+      padding-top:0;
+    }
+
+    .kv-key{
+      color:var(--muted);
+      font-size:12px;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+    }
+
+    .kv-value{
+      color:#e2e8f0;
+      font-size:14px;
+      line-height:1.5;
+      word-break:break-word;
+    }
+
+    .tag-list{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      margin-top:10px;
+    }
+
+    .tag-pill{
+      display:inline-flex;
+      align-items:center;
+      background:#0b1220;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:6px 10px;
+      color:#dbeafe;
+      font-size:12px;
+    }
+
+    .mini-stats{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+    }
+
+    .mini-stat{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#111827;
+      padding:12px;
+    }
+
+    .mini-stat-label{
+      color:var(--muted);
+      font-size:12px;
+      margin-bottom:6px;
+    }
+
+    .mini-stat-value{
+      font-size:24px;
+      font-weight:700;
+      color:#f8fafc;
+    }
+
+    .empty-state{
+      min-height:112px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      color:var(--muted);
+      font-size:14px;
+      padding:12px;
     }
 
     .list{
@@ -611,6 +793,8 @@
       .row{grid-template-columns:1fr}
       .searchbar{grid-template-columns:1fr}
       .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .mini-stats{grid-template-columns:1fr}
+      .kv-row{grid-template-columns:1fr}
     }
 
     @media (max-width:520px){
@@ -667,7 +851,7 @@
     </div>
 
     <section id="controlTab" class="tab-panel active">
-      <div class="grid-2">
+      <div class="grid-2 balanced-layout">
         <div class="panel">
           <h2>Canlı Kontrol</h2>
           <div class="section-note">Pi ekranına komut gönder</div>
@@ -712,7 +896,7 @@
     </section>
 
     <section id="contentTab" class="tab-panel">
-      <div class="grid-2">
+      <div class="grid-2 balanced-layout">
         <div class="panel">
           <h2>AI İçerik Stüdyosu</h2>
 
@@ -772,7 +956,7 @@
     </section>
 
     <section id="assetTab" class="tab-panel">
-      <div class="grid-2">
+      <div class="grid-2 asset-layout">
         <div class="panel">
           <h2>Manuel Asset Oluştur</h2>
           <div class="section-note">Yerelden görsel seç, önizle, asset olarak kaydet.</div>
@@ -891,7 +1075,10 @@
 
           <div class="field">
             <label>Arka Plan Rengi</label>
-            <input id="sceneCanvasBg" type="text" value="#ffffff" placeholder="#ffffff">
+            <div class="color-field">
+              <input id="sceneCanvasBg" type="text" value="#ffffff" placeholder="#ffffff">
+              <input id="sceneCanvasBgPicker" class="color-picker" type="color" value="#ffffff" aria-label="Arka plan rengini seç">
+            </div>
           </div>
 
           <div class="actions">
@@ -975,7 +1162,10 @@
             </div>
             <div class="field">
               <label>Yazı Rengi</label>
-              <input id="layerColor" type="text" value="#111111">
+              <div class="color-field">
+                <input id="layerColor" type="text" value="#111111">
+                <input id="layerColorPicker" class="color-picker" type="color" value="#111111" aria-label="Yazı rengini seç">
+              </div>
             </div>
           </div>
 
@@ -1010,7 +1200,7 @@
           </div>
         </div>
 
-        <div class="panel scene-preview-panel">
+        <div class="panel scene-side-panel">
           <h2>Katmanlar</h2>
           <div id="layerList" class="layer-list"></div>
 
@@ -1024,8 +1214,8 @@
     </section>
 
     <section id="piTab" class="tab-panel">
-      <div class="grid-2">
-        <div class="panel scene-side-panel">
+      <div class="grid-2 pi-layout">
+        <div class="panel">
           <h2>Pi Yönetimi</h2>
           <div class="actions">
             <button onclick="shutdownAfter()">Süreli Kapat</button>
@@ -1117,6 +1307,109 @@
       return JSON.stringify(obj, null, 2);
     }
 
+    function normalizeHexColor(value, fallback = "#ffffff"){
+      const text = String(value || "").trim();
+      if (/^#[0-9a-fA-F]{3}$/.test(text)){
+        return "#" + text.slice(1).split("").map(ch => ch + ch).join("").toLowerCase();
+      }
+      if (/^#[0-9a-fA-F]{6}$/.test(text)){
+        return text.toLowerCase();
+      }
+      return fallback;
+    }
+
+    function setColorField(textId, pickerId, value, fallback = "#ffffff"){
+      const normalized = normalizeHexColor(value, fallback);
+      const text = el(textId);
+      const picker = el(pickerId);
+      if (text) text.value = normalized;
+      if (picker) picker.value = normalized;
+      return normalized;
+    }
+
+    function bindColorField(textId, pickerId, fallback = "#ffffff", onChange = null){
+      const text = el(textId);
+      const picker = el(pickerId);
+      if (!text || !picker) return;
+
+      const apply = (value) => {
+        const normalized = normalizeHexColor(value, fallback);
+        text.value = normalized;
+        picker.value = normalized;
+        if (typeof onChange === "function"){
+          onChange(normalized);
+        }
+      };
+
+      text.addEventListener("input", () => {
+        const current = String(text.value || "").trim();
+        if (/^#[0-9a-fA-F]{3}$/.test(current) || /^#[0-9a-fA-F]{6}$/.test(current)){
+          apply(current);
+        }
+      });
+
+      text.addEventListener("blur", () => apply(text.value));
+      picker.addEventListener("input", () => apply(picker.value));
+      apply(text.value || picker.value || fallback);
+    }
+
+    function valueText(value, fallback = "-"){
+      if (Array.isArray(value)) {
+        const items = value.map(x => String(x || "").trim()).filter(Boolean);
+        return items.length ? items.join(", ") : fallback;
+      }
+      if (value === null || value === undefined) return fallback;
+      const text = String(value).trim();
+      return text ? text : fallback;
+    }
+
+    function renderKeyValueList(rows){
+      const items = (rows || []).filter(row => row && valueText(row.value, "") !== "");
+      if (!items.length){
+        return `<div class="small">Detay yok</div>`;
+      }
+      return `
+        <div class="kv-list">
+          ${items.map(row => `
+            <div class="kv-row">
+              <div class="kv-key">${esc(row.label || "-")}</div>
+              <div class="kv-value">${esc(valueText(row.value))}</div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderTagList(values){
+      const items = (values || []).map(x => String(x || "").trim()).filter(Boolean);
+      if (!items.length) return "";
+      return `
+        <div class="tag-list">
+          ${items.map(item => `<span class="tag-pill">${esc(item)}</span>`).join("")}
+        </div>
+      `;
+    }
+
+    function renderDataCard(title, rows, tags = [], foot = ""){
+      return `
+        <div class="data-card">
+          <div class="data-card-head">
+            <div class="data-card-title">${esc(title || "Detay")}</div>
+          </div>
+          ${renderKeyValueList(rows)}
+          ${renderTagList(tags)}
+          ${foot ? `<div class="data-card-foot">${esc(foot)}</div>` : ""}
+        </div>
+      `;
+    }
+
+    function humanizeScreen(screen){
+      if (screen === "speech_cards") return "Konuşma Kartları";
+      if (screen === "interactive_game") return "Etkileşimli Oyun";
+      if (screen === "layered_scene") return "Katmanlı Sahne";
+      return valueText(screen);
+    }
+
     function csvToList(v){
       return String(v || "")
         .split(",")
@@ -1150,6 +1443,108 @@
       const mi = String(d.getMinutes()).padStart(2, "0");
 
       return `${dd}-${mm}-${yyyy} ${hh}:${mi}`;
+    }
+
+    function renderQueue(commands){
+      const root = el("queueBox");
+      if (!commands.length){
+        root.innerHTML = `<div class="empty-state">Bekleyen komut yok</div>`;
+        return;
+      }
+
+      root.innerHTML = `
+        <div class="data-stack">
+          ${commands.map((item, index) => {
+            const payload = item.payload || {};
+            const cards = Array.isArray(payload.cards) ? payload.cards : [];
+            const title = payload.screen
+              ? humanizeScreen(payload.screen)
+              : valueText(item.action, `Komut ${index + 1}`);
+            const rows = [
+              { label: "Aksiyon", value: item.action || "-" },
+              { label: "Durum", value: item.status || "-" },
+              { label: "Saat", value: formatHistoryDate(item.timestamp || "") },
+              { label: "Hedef", value: payload.target || "" },
+              { label: "Oyun", value: payload.game_type || "" },
+              { label: "Kart", value: cards.length ? `${cards.length} adet` : "" },
+              { label: "Dakika", value: payload.minutes || "" },
+            ];
+            const tags = cards.length ? cards.slice(0, 8) : [];
+            const foot = payload.notes || "";
+            return renderDataCard(title, rows, tags, foot);
+          }).join("")}
+        </div>
+      `;
+    }
+
+    function renderPayloadPreviewCard(payload){
+      const root = el("payloadPreview");
+      if (!payload || !Object.keys(payload).length){
+        root.innerHTML = `<div class="empty-state">Payload henüz hazırlanmadı</div>`;
+        return;
+      }
+
+      const screen = payload.screen || "";
+      const cards = Array.isArray(payload.cards) ? payload.cards : [];
+      const rows = screen === "speech_cards"
+        ? [
+            { label: "Ekran", value: humanizeScreen(screen) },
+            { label: "Kart Sayısı", value: cards.length },
+          ]
+        : [
+            { label: "Ekran", value: humanizeScreen(screen) },
+            { label: "Oyun Tipi", value: payload.game_type || "-" },
+            { label: "Hedef", value: payload.target || "-" },
+            { label: "İlgi", value: payload.interest || "-" },
+          ];
+
+      const tags = screen === "speech_cards"
+        ? cards
+        : [payload.target, payload.interest, payload.game_type].filter(Boolean);
+
+      root.innerHTML = renderDataCard(
+        screen === "speech_cards" ? "Hazır Kart Paketi" : "Hazır Oyun Paketi",
+        rows,
+        tags,
+        payload.notes || ""
+      );
+    }
+
+    function renderAssetStats(data){
+      const root = el("assetStatsBox");
+      const totalAssets = Number(data.total_assets || 0);
+      const preferredAssets = Number(data.preferred_assets || 0);
+      const activeAssets = Number(data.active_assets || 0);
+      const totalUsedCount = Number(data.total_used_count || 0);
+      const preferenceRatio = totalAssets ? `%${Math.round((preferredAssets / totalAssets) * 100)}` : "%0";
+
+      root.innerHTML = `
+        <div class="data-stack">
+          <div class="mini-stats">
+            <div class="mini-stat">
+              <div class="mini-stat-label">Toplam Asset</div>
+              <div class="mini-stat-value">${totalAssets}</div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-label">Preferred</div>
+              <div class="mini-stat-value">${preferredAssets}</div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-label">Aktif</div>
+              <div class="mini-stat-value">${activeAssets}</div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-label">Toplam Kullanım</div>
+              <div class="mini-stat-value">${totalUsedCount}</div>
+            </div>
+          </div>
+          ${renderDataCard("Asset Özeti", [
+            { label: "Preferred Oranı", value: preferenceRatio },
+            { label: "Pasif Asset", value: Math.max(totalAssets - activeAssets, 0) },
+            { label: "Kullanım Yoğunluğu", value: totalAssets ? (totalUsedCount / totalAssets).toFixed(1) : "0.0" },
+          ])}
+        </div>
+      `;
     }
 
     function statusChip(label, isOn) {
@@ -1282,6 +1677,9 @@
         el(btn.dataset.tab).classList.add("active");
       });
     });
+
+    bindColorField("sceneCanvasBg", "sceneCanvasBgPicker", "#ffffff", () => renderSceneCanvas());
+    bindColorField("layerColor", "layerColorPicker", "#111111");
 
     el("assetImageInput").addEventListener("change", ev => {
       const file = ev.target.files?.[0];
@@ -1420,7 +1818,7 @@
 
     async function loadAssetStats(){
       const data = await api("/assets/stats");
-      el("assetStatsBox").textContent = pretty(data);
+      renderAssetStats(data);
       el("statTotalAssets").textContent = data.total_assets ?? 0;
       el("statPreferred").textContent = data.preferred_assets ?? 0;
       el("statUsed").textContent = data.total_used_count ?? 0;
@@ -1514,7 +1912,7 @@
         canvas: {
           width: Number(el("sceneCanvasW").value || 1280),
           height: Number(el("sceneCanvasH").value || 720),
-          background: el("sceneCanvasBg").value.trim() || "#ffffff",
+          background: normalizeHexColor(el("sceneCanvasBg").value, "#ffffff"),
         },
         layers: sceneLayers.slice()
       };
@@ -1530,7 +1928,7 @@
       el("sceneNotes").value = "";
       el("sceneCanvasW").value = "1280";
       el("sceneCanvasH").value = "720";
-      el("sceneCanvasBg").value = "#ffffff";
+      setColorField("sceneCanvasBg", "sceneCanvasBgPicker", "#ffffff", "#ffffff");
       resetLayerForm();
       renderSceneCanvas();
       renderLayerList();
@@ -1550,7 +1948,7 @@
       el("layerZ").value = String(nextLayerZ());
       el("layerOpacity").value = "1";
       el("layerFontSize").value = "42";
-      el("layerColor").value = "#111111";
+      setColorField("layerColor", "layerColorPicker", "#111111", "#111111");
       el("layerVisible").checked = true;
       renderLayerList();
       renderSceneCanvas();
@@ -1569,7 +1967,7 @@
       el("layerZ").value = String(layer.z ?? 0);
       el("layerOpacity").value = String(layer.opacity ?? 1);
       el("layerFontSize").value = String(layer.font_size ?? 42);
-      el("layerColor").value = layer.color || "#111111";
+      setColorField("layerColor", "layerColorPicker", layer.color || "#111111", "#111111");
       el("layerVisible").checked = !!layer.visible;
     }
 
@@ -1611,7 +2009,7 @@
       if (type === "text" || type === "guide"){
         layer.text = text;
         layer.font_size = Number(el("layerFontSize").value || 42);
-        layer.color = el("layerColor").value.trim() || "#111111";
+        layer.color = normalizeHexColor(el("layerColor").value, "#111111");
         layer.font_weight = type === "guide" ? "600" : "700";
         layer.align = "left";
       }
@@ -1674,7 +2072,7 @@
         delete layer.src;
         layer.text = text;
         layer.font_size = Number(el("layerFontSize").value || 42);
-        layer.color = el("layerColor").value.trim() || "#111111";
+        layer.color = normalizeHexColor(el("layerColor").value, "#111111");
         layer.font_weight = type === "guide" ? "600" : "700";
       }
 
@@ -1801,7 +2199,7 @@
       const root = el("sceneCanvas");
       const w = Number(el("sceneCanvasW").value || 1280);
       const h = Number(el("sceneCanvasH").value || 720);
-      const bg = el("sceneCanvasBg").value.trim() || "#ffffff";
+      const bg = normalizeHexColor(el("sceneCanvasBg").value, "#ffffff");
 
       root.style.background = bg;
       root.innerHTML = "";
@@ -1966,7 +2364,7 @@
       el("sceneNotes").value = item.notes || "";
       el("sceneCanvasW").value = item.canvas?.width || 1280;
       el("sceneCanvasH").value = item.canvas?.height || 720;
-      el("sceneCanvasBg").value = item.canvas?.background || "#ffffff";
+      setColorField("sceneCanvasBg", "sceneCanvasBgPicker", item.canvas?.background || "#ffffff", "#ffffff");
       sceneLayers = Array.isArray(item.layers) ? item.layers.slice() : [];
       selectedLayerId = "";
       resetLayerForm();
@@ -2056,7 +2454,7 @@
 
     async function refreshQueue(){
       const data = await api("/queue");
-      el("queueBox").textContent = pretty(data.commands || []);
+      renderQueue(data.commands || []);
     }
 
     function buildPayloadPreview(){
@@ -2070,7 +2468,7 @@
         ? { screen, cards: target ? [target] : [] }
         : { screen, game_type: gameType, target, interest, notes };
 
-      el("payloadPreview").textContent = pretty(payload);
+      renderPayloadPreviewCard(payload);
       return payload;
     }
 
@@ -2147,7 +2545,7 @@
       el("contentInterest").value = payload.interest || "";
       el("contentGameType").value = payload.game_type || "";
       el("contentNotes").value = payload.notes || "";
-      el("payloadPreview").textContent = pretty(payload);
+      renderPayloadPreviewCard(payload);
       setMsg("contentMessage", "Taslak yüklendi", true);
     }
 

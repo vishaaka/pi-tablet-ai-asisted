@@ -58,7 +58,22 @@
       "session_duration_min": 20,
       "attention_threshold": 45,
       "tick_cooldown_sec": 8,
-      "fallback_interest": "oyuncak"
-    }
+        "fallback_interest": "oyuncak"
+      }
+  },
+  "deployment": {
+    "package_name": "pi-side",
+    "target_dir": "C:\\pitablet",
+    "backup_root": "C:\\pitablet_backups",
+    "exclude_dirs": [
+      "__pycache__",
+      ".git",
+      ".venv",
+      "venv"
+    ],
+    "exclude_files": [
+      "*.pyc",
+      "*.pyo"
+    ]
   }
 }

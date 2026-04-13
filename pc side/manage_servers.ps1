@@ -26,31 +26,12 @@ function Get-PortPids {
 
     $pids = @()
 
-    try {
-        $connections = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
-        foreach ($conn in $connections) {
-            if ($conn.OwningProcess -and ($pids -notcontains $conn.OwningProcess)) {
-                $pids += [string]$conn.OwningProcess
+    foreach ($line in (netstat -ano -p TCP)) {
+        if ($line -match "^\s*TCP\s+\S+:$Port\s+\S+\s+\S+\s+(\d+)\s*$") {
+            $foundPid = $matches[1]
+            if ($foundPid -match '^\d+$' -and ($pids -notcontains $foundPid)) {
+                $pids += $foundPid
             }
-        }
-    } catch {
-        try {
-            $lines = netstat -ano | Select-String ":$Port"
-            foreach ($line in $lines) {
-                $text = ($line.ToString() -replace '\s+', ' ').Trim()
-                $parts = $text.Split(' ')
-                if ($parts.Length -ge 5) {
-                    $localAddr = $parts[1]
-                    $pid = $parts[$parts.Length - 1]
-
-                    if ($localAddr -match ":$Port$") {
-                        if ($pid -match '^\d+$' -and ($pids -notcontains $pid)) {
-                            $pids += $pid
-                        }
-                    }
-                }
-            }
-        } catch {
         }
     }
 
