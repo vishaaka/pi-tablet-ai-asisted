@@ -3,20 +3,22 @@ param(
     [string]$Target
 )
 
-$BaseDir = "C:\pitablet"
+$BaseDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$SettingsPath = Join-Path $BaseDir "config\\settings.json"
+$Settings = Get-Content -LiteralPath $SettingsPath -Raw | ConvertFrom-Json
 
 $Ports = @{
-    panel = 9100
-    tool = 8000
-    middleware = 7000
-    dashboard = 9000
+    panel = [int]$Settings.services.panel.port
+    tool = [int]$Settings.services.tool.port
+    middleware = [int]$Settings.services.middleware.port
+    dashboard = [int]$Settings.services.dashboard.port
 }
 
 $Commands = @{
-    panel      = 'python -m uvicorn parent_panel:app --port 9100'
-    tool       = 'python -m uvicorn app:app --port 8000'
-    middleware = 'python -m uvicorn middleware:app --port 7000'
-    dashboard  = 'python -m uvicorn dashboard:app --port 9000'
+    panel      = "python -m uvicorn $($Settings.services.panel.uvicorn_app) --host $($Settings.services.panel.host) --port $($Settings.services.panel.port)"
+    tool       = "python -m uvicorn $($Settings.services.tool.uvicorn_app) --host $($Settings.services.tool.host) --port $($Settings.services.tool.port)"
+    middleware = "python -m uvicorn $($Settings.services.middleware.uvicorn_app) --host $($Settings.services.middleware.host) --port $($Settings.services.middleware.port)"
+    dashboard  = "python -m uvicorn $($Settings.services.dashboard.uvicorn_app) --host $($Settings.services.dashboard.host) --port $($Settings.services.dashboard.port)"
 }
 
 function Get-PortPids {

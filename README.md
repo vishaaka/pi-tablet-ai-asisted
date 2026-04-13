@@ -167,7 +167,29 @@ her zaman panelden yapılabilir.
 
 ## Temel backend omurgası
 
-### `pc side/asset_manager.py`
+## Aktif PC-Side Yapısı
+
+README ile uyumlu sade PC-side omurgası aşağıdaki dosyalar etrafında tutulacaktır:
+
+* `pc side/services/parent_panel.py` — ebeveyn paneli API ve ana kontrol yüzeyi
+* `pc side/ui/parent_panel_ui.html` — üretim panel arayüzü
+* `pc side/core/scene_manager.py` — katmanlı sahne kayıt ve payload üretimi
+* `pc side/storage/asset_manager.py` — asset kayıt ve kullanım istatistikleri
+* `pc side/core/session_orchestrator.py` — otonom seans akışı ve pack üretimi
+* `pc side/core/content_pack_builder.py` — konuşma kartı / preload pack üretimi
+* `pc side/storage/command_queue.py` — Pi'ye gidecek komut kuyruğu
+* `pc side/system/server_manager.py` + `manage_servers.*` — servis başlatma / durdurma
+* `pc side/services/app.py` — dikkat, konuşma ve basit AI karar servisi
+* `pc side/services/middleware.py` — LM Studio tabanlı ara yönlendirme katmanı
+* `pc side/services/dashboard.py` — milestone ve özet verileri
+* `pc side/storage/db.py`, `storage/speech.py`, `core/milestone_engine.py` — temel veri ve analiz katmanı
+* `pc side/config/settings.json` — port, yol, model ve API ayarları için merkezî dosya
+* `pc side/data/` — çalışan sistemin runtime verileri
+* `pc side/assets/` — kayıtlı görseller
+
+Bu çekirdek dışında kalan kopya klasörler, bozuk eski importer scriptleri ve kullanılmayan legacy yardımcılar mümkün olduğunca repodan temiz tutulacaktır.
+
+### `pc side/storage/asset_manager.py`
 
 Asset manifest yönetimi.
 
@@ -181,7 +203,7 @@ Sorumluluklar:
 * history
 * stats
 
-## `pc side/scene_manager.py`
+## `pc side/core/scene_manager.py`
 
 Katmanlı sahne sistemi.
 
@@ -193,7 +215,7 @@ Sorumluluklar:
 * layered scene payload üretimi
 * Pi contract
 
-## `pc side/parent_panel.py`
+## `pc side/services/parent_panel.py`
 
 API katmanı.
 
@@ -206,7 +228,7 @@ Ana endpoint grupları:
 * `/queue`
 * `/server/*`
 
-## `pc side/parent_panel_ui.html`
+## `pc side/ui/parent_panel_ui.html`
 
 Üretim hazır ebeveyn paneli.
 

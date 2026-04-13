@@ -1,0 +1,2253 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ebeveyn Kontrol Dashboard</title>
+  <style>
+    :root{
+      --bg:#0f172a;
+      --panel:#111827;
+      --muted:#94a3b8;
+      --text:#e5e7eb;
+      --line:#334155;
+      --accent:#22c55e;
+      --warn:#f59e0b;
+      --danger:#ef4444;
+      --shadow:0 10px 25px rgba(0,0,0,.25);
+      --radius:18px;
+      --chip-bg:#0b1220;
+      --good-bg:#052e1b;
+      --good-line:#166534;
+      --bad-bg:#3f1111;
+      --bad-line:#7f1d1d;
+      --neutral-bg:#111827;
+      --neutral-line:#334155;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      background:linear-gradient(180deg,#0b1220,#111827);
+      color:var(--text);
+    }
+
+    .wrap{
+      max-width:1560px;
+      margin:0 auto;
+      padding:20px;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:18px;
+      flex-wrap:wrap;
+    }
+
+    .topbar h1{
+      margin:0;
+      font-size:28px;
+    }
+
+    .sub{
+      color:var(--muted);
+      margin-top:6px;
+      font-size:14px;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#0b1220;
+      color:#cbd5e1;
+      font-size:13px;
+      white-space:nowrap;
+    }
+
+    .dot{
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:var(--accent);
+      box-shadow:0 0 12px rgba(34,197,94,.8);
+    }
+
+    .metrics{
+      display:grid;
+      grid-template-columns:repeat(6,minmax(0,1fr));
+      gap:14px;
+      margin-bottom:18px;
+    }
+
+    .metric{
+      background:rgba(17,24,39,.92);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+
+    .metric .k{
+      color:var(--muted);
+      font-size:13px;
+      margin-bottom:8px;
+    }
+
+    .metric .v{
+      font-size:28px;
+      font-weight:700;
+    }
+
+    .tabs{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+
+    .tab-btn{
+      background:#0b1220;
+      color:#cbd5e1;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:10px 14px;
+      cursor:pointer;
+    }
+
+    .tab-btn.active{
+      background:#1d4ed8;
+      border-color:#2563eb;
+      color:#fff;
+    }
+
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:1.05fr .95fr;
+      gap:18px;
+    }
+
+    .grid-3{
+      display:grid;
+      grid-template-columns:360px 1fr 360px;
+      gap:18px;
+      align-items:start;
+    }
+
+    .scene-layout{
+      grid-template-areas:"form preview side";
+    }
+
+    .scene-form-panel{grid-area:form}
+    .scene-preview-panel{
+      grid-area:preview;
+      display:flex;
+      flex-direction:column;
+    }
+    .scene-side-panel{grid-area:side}
+
+    .grid-3 > .panel{
+      min-width:0;
+    }
+
+    .panel{
+      background:rgba(17,24,39,.94);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
+    }
+
+    .panel h2,.panel h3{
+      margin:0 0 14px 0;
+    }
+
+    .section-note{
+      color:var(--muted);
+      font-size:13px;
+      margin-bottom:12px;
+    }
+
+    .row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    .field{
+      margin-bottom:12px;
+    }
+
+    .field label{
+      display:block;
+      font-size:13px;
+      color:#cbd5e1;
+      margin-bottom:7px;
+    }
+
+    .field input[type="text"],
+    .field input[type="number"],
+    .field textarea,
+    .field select{
+      width:100%;
+      border:1px solid var(--line);
+      background:#0b1220;
+      color:var(--text);
+      border-radius:12px;
+      padding:11px 12px;
+      outline:none;
+    }
+
+    .field textarea{
+      resize:vertical;
+      min-height:88px;
+    }
+
+    .check{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      color:#cbd5e1;
+      font-size:14px;
+      margin-top:8px;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+
+    button{
+      border:1px solid transparent;
+      background:#1d4ed8;
+      color:#fff;
+      padding:10px 14px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:600;
+    }
+
+    button.alt{
+      background:#0b1220;
+      border-color:var(--line);
+      color:#cbd5e1;
+    }
+
+    button.warn{ background:#92400e; }
+    button.danger{ background:#7f1d1d; }
+    button.good{ background:#065f46; }
+
+    .preview-shell{
+      display:grid;
+      grid-template-columns:280px 1fr;
+      gap:16px;
+      align-items:start;
+    }
+
+    .thumb-box{
+      width:100%;
+      aspect-ratio:1/1;
+      border:1px dashed #475569;
+      border-radius:18px;
+      background:#0b1220;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      color:#94a3b8;
+      text-align:center;
+      padding:16px;
+    }
+
+    .thumb-box img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:none;
+    }
+
+    .preview-meta{
+      border:1px solid var(--line);
+      background:#0b1220;
+      border-radius:16px;
+      padding:14px;
+      min-height:280px;
+    }
+
+    .small{
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .msg{
+      min-height:20px;
+      margin-top:10px;
+      font-size:14px;
+      font-weight:600;
+    }
+
+    .msg.ok{color:#4ade80}
+    .msg.err{color:#f87171}
+
+    .searchbar{
+      display:grid;
+      grid-template-columns:2fr 1fr 1fr 1fr auto;
+      gap:10px;
+      margin-bottom:14px;
+    }
+
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+      gap:14px;
+    }
+
+    .asset-card{
+      background:#0b1220;
+      border:1px solid var(--line);
+      border-radius:18px;
+      overflow:hidden;
+    }
+
+    .asset-card img{
+      width:100%;
+      height:190px;
+      object-fit:cover;
+      background:#111827;
+      display:block;
+    }
+
+    .asset-body{
+      padding:14px;
+    }
+
+    .asset-title{
+      font-size:18px;
+      font-weight:700;
+      margin-bottom:8px;
+    }
+
+    .asset-id{
+      color:var(--muted);
+      font-size:12px;
+      margin-bottom:10px;
+      word-break:break-all;
+    }
+
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      margin:8px 0;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      background:#111827;
+      border:1px solid var(--line);
+      color:#cbd5e1;
+      border-radius:999px;
+      padding:5px 9px;
+      font-size:12px;
+    }
+
+    .notes{
+      min-height:42px;
+      color:#d1d5db;
+      font-size:14px;
+      margin:10px 0;
+      white-space:pre-wrap;
+    }
+
+    .asset-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
+    .mono{
+      font-family:Consolas,Monaco,monospace;
+    }
+
+    .queue-box,.history-box{
+      background:#0b1220;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      min-height:120px;
+      overflow:auto;
+    }
+
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .list-item{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      background:#0b1220;
+    }
+
+    .scene-canvas-wrap{
+      border:1px solid var(--line);
+      background:#0b1220;
+      border-radius:18px;
+      padding:12px;
+      width:min(100%,980px);
+      margin:0 auto;
+    }
+
+    .scene-toolbar{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+      justify-content:center;
+    }
+
+    .scene-canvas{
+      position:relative;
+      width:100%;
+      aspect-ratio:16/9;
+      background:#fff;
+      border-radius:12px;
+      overflow:hidden;
+      border:1px solid #cbd5e1;
+      user-select:none;
+    }
+
+    .scene-layer{
+      position:absolute;
+      overflow:hidden;
+      cursor:move;
+      border:1px dashed transparent;
+      display:flex;
+      align-items:flex-start;
+      justify-content:flex-start;
+    }
+
+    .scene-layer.selected{
+      border-color:#2563eb;
+      box-shadow:0 0 0 2px rgba(37,99,235,.25) inset;
+    }
+
+    .scene-layer img{
+      width:100%;
+      height:100%;
+      display:block;
+      pointer-events:none;
+    }
+
+    .scene-layer.text-layer,
+    .scene-layer.guide-layer{
+      padding:4px 6px;
+      white-space:pre-wrap;
+      font-weight:700;
+    }
+
+    .layer-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      max-height:520px;
+      overflow:auto;
+    }
+
+    .layer-item{
+      border:1px solid var(--line);
+      background:#0b1220;
+      border-radius:12px;
+      padding:10px;
+      cursor:pointer;
+    }
+
+    .layer-item.active{
+      border-color:#2563eb;
+      background:#111b33;
+    }
+
+    .layer-item .top{
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      margin-bottom:6px;
+      font-size:13px;
+    }
+
+    .layer-type{
+      color:#93c5fd;
+    }
+
+    .scene-card{
+      border:1px solid var(--line);
+      background:#0b1220;
+      border-radius:16px;
+      padding:12px;
+    }
+
+    .scene-card h4{
+      margin:0 0 8px 0;
+    }
+
+    .scene-card .meta{
+      color:var(--muted);
+      font-size:12px;
+      margin-bottom:8px;
+    }
+
+    .scene-preview-panel h2,
+    .scene-preview-panel .small{
+      width:100%;
+    }
+
+    .inline-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
+    .status-wrap{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .status-badges{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .status-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:13px;
+      font-weight:600;
+      border:1px solid var(--neutral-line);
+      background:var(--neutral-bg);
+      color:var(--text);
+    }
+
+    .status-chip.good{
+      background:var(--good-bg);
+      border-color:var(--good-line);
+      color:#bbf7d0;
+    }
+
+    .status-chip.bad{
+      background:var(--bad-bg);
+      border-color:var(--bad-line);
+      color:#fecaca;
+    }
+
+    .status-meta{
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#0b1220;
+      padding:10px 12px;
+      color:#cbd5e1;
+      line-height:1.6;
+      font-size:13px;
+    }
+
+    .autonomy-wrap{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .autonomy-line{
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#0b1220;
+      padding:10px 12px;
+      color:#cbd5e1;
+      line-height:1.6;
+      font-size:13px;
+    }
+
+    @media (max-width:1100px){
+      .scene-layout{
+        grid-template-columns:1fr;
+        grid-template-areas:
+          "form"
+          "preview"
+          "side";
+      }
+      .grid-3{grid-template-columns:1fr}
+    }
+
+    @media (max-width:1100px){
+      .grid-2{grid-template-columns:1fr}
+      .preview-shell{grid-template-columns:1fr}
+      .searchbar{grid-template-columns:1fr 1fr}
+      .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
+    }
+
+    @media (max-width:700px){
+      .row{grid-template-columns:1fr}
+      .searchbar{grid-template-columns:1fr}
+      .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+
+    @media (max-width:520px){
+      .metrics{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1>Ebeveyn Denetim ve Gelişim Paneli</h1>
+        <div class="sub">Manuel asset ve katmanlı sahne editörü</div>
+      </div>
+      <div class="badge">
+        <span class="dot"></span>
+        <span id="serverStatusText">Durum yükleniyor</span>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="k">Toplam Asset</div>
+        <div class="v" id="statTotalAssets">0</div>
+      </div>
+      <div class="metric">
+        <div class="k">Preferred</div>
+        <div class="v" id="statPreferred">0</div>
+      </div>
+      <div class="metric">
+        <div class="k">Toplam Kullanım</div>
+        <div class="v" id="statUsed">0</div>
+      </div>
+      <div class="metric">
+        <div class="k">Aktif Asset</div>
+        <div class="v" id="statActive">0</div>
+      </div>
+      <div class="metric">
+        <div class="k">Toplam Sahne</div>
+        <div class="v" id="statSceneCount">0</div>
+      </div>
+      <div class="metric">
+        <div class="k">Toplam Katman</div>
+        <div class="v" id="statLayerCount">0</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="controlTab">Canlı Kontrol</button>
+      <button class="tab-btn" data-tab="contentTab">İçerik</button>
+      <button class="tab-btn" data-tab="assetTab">Asset Stüdyosu</button>
+      <button class="tab-btn" data-tab="sceneTab">Sahne Editörü</button>
+      <button class="tab-btn" data-tab="piTab">Pi</button>
+    </div>
+
+    <section id="controlTab" class="tab-panel active">
+      <div class="grid-2">
+        <div class="panel">
+          <h2>Canlı Kontrol</h2>
+          <div class="section-note">Pi ekranına komut gönder</div>
+
+          <div class="field">
+            <label>Konuşma Kartları</label>
+            <input id="speechWordsInput" type="text" placeholder="örn: top, araba, kedi">
+          </div>
+
+          <div class="actions">
+            <button onclick="sendSpeechCards()">Konuşma Kartları Gönder</button>
+            <button class="alt" onclick="refreshQueue()">Kuyruğu Yenile</button>
+          </div>
+
+          <hr style="border-color:var(--line); margin:18px 0;">
+
+          <div class="row">
+            <div class="field">
+              <label>Oyun Tipi</label>
+              <input id="gameTypeInput" type="text" placeholder="örn: object_match">
+            </div>
+            <div class="field">
+              <label>Hedef</label>
+              <input id="gameTargetInput" type="text" placeholder="örn: top">
+            </div>
+          </div>
+
+          <div class="actions">
+            <button onclick="sendGamePayload()">Oyun Gönder</button>
+            <button class="warn" onclick="shutdownAfter()">Süreli Kapat</button>
+            <button class="danger" onclick="shutdownNow()">Hemen Kapat</button>
+          </div>
+
+          <div id="controlMessage" class="msg"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Komut Kuyruğu</h2>
+          <div id="queueBox" class="queue-box mono">Yükleniyor...</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contentTab" class="tab-panel">
+      <div class="grid-2">
+        <div class="panel">
+          <h2>AI İçerik Stüdyosu</h2>
+
+          <div class="field">
+            <label>Taslak Adı</label>
+            <input id="draftName" type="text" placeholder="örn: top_oturumu">
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Ekran Tipi</label>
+              <select id="contentScreenType">
+                <option value="speech_cards">Konuşma Kartları</option>
+                <option value="interactive_game">Görsel Oyun</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Hedef Kelime</label>
+              <input id="contentTargetWord" type="text" placeholder="örn: top">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>İlgi Alanı</label>
+              <input id="contentInterest" type="text" placeholder="örn: oyuncak">
+            </div>
+            <div class="field">
+              <label>Oyun Tipi</label>
+              <input id="contentGameType" type="text" placeholder="örn: object_match">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Terapi / İçerik Notları</label>
+            <textarea id="contentNotes" placeholder="İçerik notlarını buraya yaz"></textarea>
+          </div>
+
+          <div class="actions">
+            <button onclick="saveDraft()">Taslağı Kaydet</button>
+            <button class="alt" onclick="loadDrafts()">Taslakları Yenile</button>
+            <button onclick="buildPayloadPreview()">Payload Önizle</button>
+            <button class="alt" onclick="sendPreviewPayload()">Pi'ye Gönder</button>
+          </div>
+
+          <div id="contentMessage" class="msg"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Gönderilecek Payload</h2>
+          <div id="payloadPreview" class="queue-box mono">{}</div>
+
+          <h3 style="margin-top:18px;">Kayıtlı Taslaklar</h3>
+          <div id="draftList" class="list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="assetTab" class="tab-panel">
+      <div class="grid-2">
+        <div class="panel">
+          <h2>Manuel Asset Oluştur</h2>
+          <div class="section-note">Yerelden görsel seç, önizle, asset olarak kaydet.</div>
+
+          <div class="preview-shell">
+            <div>
+              <div class="thumb-box">
+                <img id="thumbPreview" alt="Önizleme">
+                <div id="thumbPlaceholder">Seçilen görsel burada önizlenecek</div>
+              </div>
+            </div>
+
+            <div class="preview-meta">
+              <div class="field">
+                <label>Görsel Seç</label>
+                <input id="assetImageInput" type="file" accept="image/*">
+              </div>
+
+              <div class="field">
+                <label>Türkçe Label</label>
+                <input id="assetLabelTr" type="text" placeholder="örn: top">
+              </div>
+
+              <div class="field">
+                <label>Etiketler</label>
+                <input id="assetTagsTr" type="text" placeholder="örn: oyuncak, yuvarlak">
+              </div>
+
+              <div class="field">
+                <label>İlgi Alanları</label>
+                <input id="assetInterestsTr" type="text" placeholder="örn: top, oyun">
+              </div>
+
+              <div class="check">
+                <input id="assetPreferred" type="checkbox">
+                <label for="assetPreferred" style="margin:0;">Preferred</label>
+              </div>
+
+              <div class="field">
+                <label>Notlar</label>
+                <textarea id="assetNotes" placeholder="örn: evdeki kırmızı top"></textarea>
+              </div>
+
+              <div class="actions">
+                <button onclick="createManualAsset()">Asset Kaydet</button>
+                <button class="alt" onclick="resetAssetForm()">Formu Temizle</button>
+                <button class="alt" onclick="saveEditedAsset()">Seçili Asseti Güncelle</button>
+              </div>
+
+              <div id="assetCreateMessage" class="msg"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Asset İstatistikleri</h2>
+          <div id="assetStatsBox" class="queue-box mono">Yükleniyor...</div>
+
+          <h3 style="margin-top:18px;">Asset Geçmişi</h3>
+          <div id="assetHistoryBox" class="history-box"></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:18px;">
+        <h2>Manifest Tarayıcı</h2>
+
+        <div class="searchbar">
+          <input id="filterQ" type="text" placeholder="Arama">
+          <input id="filterLabel" type="text" placeholder="Label">
+          <input id="filterTag" type="text" placeholder="Tag">
+          <input id="filterInterest" type="text" placeholder="Interest">
+          <button onclick="loadAssets()">Listele</button>
+        </div>
+
+        <div id="assetsGrid" class="cards"></div>
+      </div>
+    </section>
+
+    <section id="sceneTab" class="tab-panel">
+      <div class="grid-3 scene-layout">
+        <div class="panel scene-form-panel">
+          <h2>Sahne Tanımı</h2>
+          <div class="section-note">Katmanları aynı anda gör, tıkla, sürükle, öne/arkaya taşı.</div>
+
+          <div class="field">
+            <label>Sahne Adı</label>
+            <input id="sceneName" type="text" placeholder="örn: Top sahada">
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Hedef Kelime</label>
+              <input id="sceneTargetWord" type="text" placeholder="örn: top">
+            </div>
+            <div class="field">
+              <label>Söyleniş</label>
+              <input id="scenePronunciation" type="text" placeholder="örn: to-p">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Notlar</label>
+            <textarea id="sceneNotes" placeholder="örn: arka plan saha, ortada çocuk, önde top"></textarea>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Canvas Genişlik</label>
+              <input id="sceneCanvasW" type="number" value="1280">
+            </div>
+            <div class="field">
+              <label>Canvas Yükseklik</label>
+              <input id="sceneCanvasH" type="number" value="720">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Arka Plan Rengi</label>
+            <input id="sceneCanvasBg" type="text" value="#ffffff" placeholder="#ffffff">
+          </div>
+
+          <div class="actions">
+            <button class="good" onclick="saveScene()">Sahneyi Kaydet</button>
+            <button class="alt" onclick="sendSceneToPi()">Pi'ye Gönder</button>
+            <button class="alt" onclick="resetSceneEditor()">Formu Temizle</button>
+          </div>
+
+          <div id="sceneMessage" class="msg"></div>
+
+          <hr style="border-color:var(--line); margin:18px 0;">
+
+          <h3>Katman Ekle / Güncelle</h3>
+
+          <div class="field">
+            <label>Katman Türü</label>
+            <select id="layerType">
+              <option value="background">Arka Plan</option>
+              <option value="image">Görsel</option>
+              <option value="avatar">Rehber Karakter</option>
+              <option value="decor">Dekor</option>
+              <option value="text">Yazı</option>
+              <option value="guide">Söyleniş / Hece</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Katman Adı</label>
+            <input id="layerName" type="text" placeholder="örn: ön top">
+          </div>
+
+          <div class="field">
+            <label>Asset Seç</label>
+            <select id="layerAssetSelect">
+              <option value="">Asset seç</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Yazı İçeriği</label>
+            <input id="layerText" type="text" placeholder="örn: TOP">
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>X</label>
+              <input id="layerX" type="number" value="0">
+            </div>
+            <div class="field">
+              <label>Y</label>
+              <input id="layerY" type="number" value="0">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Genişlik</label>
+              <input id="layerW" type="number" value="200">
+            </div>
+            <div class="field">
+              <label>Yükseklik</label>
+              <input id="layerH" type="number" value="200">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Z Sırası</label>
+              <input id="layerZ" type="number" value="0">
+            </div>
+            <div class="field">
+              <label>Opacity</label>
+              <input id="layerOpacity" type="number" value="1" step="0.1" min="0" max="1">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Yazı Boyutu</label>
+              <input id="layerFontSize" type="number" value="42">
+            </div>
+            <div class="field">
+              <label>Yazı Rengi</label>
+              <input id="layerColor" type="text" value="#111111">
+            </div>
+          </div>
+
+          <div class="check">
+            <input id="layerVisible" type="checkbox" checked>
+            <label for="layerVisible" style="margin:0;">Görünür</label>
+          </div>
+
+          <div class="actions">
+            <button onclick="addLayerToScene()">Katman Ekle</button>
+            <button class="alt" onclick="updateSelectedLayer()">Seçili Katmanı Güncelle</button>
+            <button class="danger" onclick="removeSelectedLayer()">Seçili Katmanı Sil</button>
+          </div>
+        </div>
+
+        <div class="panel scene-preview-panel">
+          <h2>Canlı Sahne Önizleme</h2>
+
+          <div class="scene-toolbar">
+            <button class="alt" onclick="bringSelectedToFront()">Öne Getir</button>
+            <button class="alt" onclick="sendSelectedToBack()">Arkaya Gönder</button>
+            <button class="alt" onclick="moveSelectedToMiddle()">Ortada Kalsın</button>
+            <button class="alt" onclick="centerSelectedOnCanvas()">Merkeze Al</button>
+          </div>
+
+          <div class="scene-canvas-wrap">
+            <div id="sceneCanvas" class="scene-canvas"></div>
+          </div>
+
+          <div class="small" style="margin-top:10px;">
+            Katmana tıkla, seç. Seçili katmanı mouse ile sürükleyebilirsin. X / Y alanları otomatik güncellenir.
+          </div>
+        </div>
+
+        <div class="panel scene-preview-panel">
+          <h2>Katmanlar</h2>
+          <div id="layerList" class="layer-list"></div>
+
+          <h3 style="margin-top:18px;">Kaydedilmiş Sahneler</h3>
+          <div class="actions">
+            <button class="alt" onclick="loadScenes()">Sahneleri Yenile</button>
+          </div>
+          <div id="sceneList" class="list" style="margin-top:12px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="piTab" class="tab-panel">
+      <div class="grid-2">
+        <div class="panel scene-side-panel">
+          <h2>Pi Yönetimi</h2>
+          <div class="actions">
+            <button onclick="shutdownAfter()">Süreli Kapat</button>
+            <button class="danger" onclick="shutdownNow()">Hemen Kapat</button>
+          </div>
+
+          <h3 style="margin-top:18px;">Sunucu Kontrol Merkezi</h3>
+          <div class="row">
+            <div class="field">
+              <label>Çalışma Modu</label>
+              <select id="modeSelect">
+                <option value="prod">PROD</option>
+                <option value="test">TEST</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <button onclick="applyMode()">Modu Uygula</button>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="alt" onclick="startAllServers()">Tümünü Başlat</button>
+            <button class="alt" onclick="stopAllServers()">Tümünü Durdur</button>
+            <button class="alt" onclick="stopAllServersSafe()">Güvenli Durdur</button>
+            <button class="warn" onclick="fakeSpeech()">Test Verisi Üret</button>
+          </div>
+
+          <div id="piMessage" class="msg"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Sunucu Durumları</h2>
+          <div id="serverStatusBox" class="status-wrap">
+            <div class="small">Yükleniyor...</div>
+          </div>
+
+          <h3 style="margin-top:18px;">Otonom Seans</h3>
+          <div class="actions">
+            <button onclick="startAutonomy()">Seansı Başlat</button>
+            <button class="alt" onclick="tickAutonomy()">Tick</button>
+            <button class="danger" onclick="stopAutonomy()">Seansı Durdur</button>
+          </div>
+
+          <div id="autonomyStateBox" class="autonomy-wrap" style="margin-top:12px;">
+            <div class="small">Yükleniyor...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    let selectedImageBase64 = "";
+    let allAssetsCache = [];
+    let sceneLayers = [];
+    let selectedLayerId = "";
+    let editingSceneId = "";
+    let editingAssetId = "";
+
+    let dragState = {
+      active: false,
+      layerId: "",
+      startMouseX: 0,
+      startMouseY: 0,
+      startX: 0,
+      startY: 0
+    };
+
+    function el(id){ return document.getElementById(id); }
+
+    function setMsg(id, text, ok = true){
+      const node = el(id);
+      if (!node) return;
+      node.textContent = text || "";
+      node.className = ok ? "msg ok" : "msg err";
+    }
+
+    function esc(v){
+      return String(v ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#39;");
+    }
+
+    function pretty(obj){
+      return JSON.stringify(obj, null, 2);
+    }
+
+    function csvToList(v){
+      return String(v || "")
+        .split(",")
+        .map(x => x.trim())
+        .filter(Boolean);
+    }
+
+    function normalizeAssetPath(path){
+      if (!path) return "";
+      path = String(path).replaceAll("\\", "/");
+      if (path.startsWith("/asset_files/")) return path;
+      if (path.startsWith("assets/")) return "/asset_files/" + path.replace(/^assets\//, "");
+      if (path.startsWith("/assets/")) return "/asset_files/" + path.replace(/^\/assets\//, "");
+      return path;
+    }
+
+    function formatHistoryDate(value){
+      if (!value) return "-";
+
+      const d = new Date(value);
+      if (isNaN(d.getTime())){
+        return String(value)
+          .replace("T", " ")
+          .replace(/\.\d+$/, "");
+      }
+
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mi = String(d.getMinutes()).padStart(2, "0");
+
+      return `${dd}-${mm}-${yyyy} ${hh}:${mi}`;
+    }
+
+    function statusChip(label, isOn) {
+      return `<span class="status-chip ${isOn ? "good" : "bad"}">${esc(label)}: ${isOn ? "Çalışıyor" : "Kapalı"}</span>`;
+    }
+
+    function formatServerStatus(data) {
+      const chips = `
+        <div class="status-badges">
+          ${statusChip("Panel", !!data.panel)}
+          ${statusChip("Tool", !!data.tool)}
+          ${statusChip("Middleware", !!data.middleware)}
+          ${statusChip("Dashboard", !!data.dashboard)}
+        </div>
+      `;
+
+      const metaLines = [];
+
+      if (data.ports) {
+        metaLines.push(
+          `Portlar: panel=${data.ports.panel}, tool=${data.ports.tool}, middleware=${data.ports.middleware}, dashboard=${data.ports.dashboard}`
+        );
+      }
+
+      if (data.panel_url) {
+        metaLines.push(`Panel URL: ${esc(data.panel_url)}`);
+      }
+
+      if (data.mode) {
+        metaLines.push(`Mod: ${esc(data.mode)}`);
+      }
+
+      if (data.manual_asset_mode !== undefined) {
+        metaLines.push(`Manual Asset Modu: ${data.manual_asset_mode ? "Açık" : "Kapalı"}`);
+      }
+
+      return `
+        ${chips}
+        <div class="status-meta">${metaLines.join("<br>")}</div>
+      `;
+    }
+
+    function formatAutonomySession(data) {
+      const running = !!data.running;
+
+      const chips = `
+        <div class="status-badges">
+          <span class="status-chip ${running ? "good" : "bad"}">Durum: ${running ? "Aktif" : "Pasif"}</span>
+          <span class="status-chip">Zorluk: ${esc(data.difficulty ?? 1)}</span>
+          <span class="status-chip">Tekrar: ${esc(data.repeat_count ?? 0)}</span>
+        </div>
+      `;
+
+      const lines = [];
+
+      if (data.session_id) {
+        lines.push(`Seans ID: ${esc(data.session_id)}`);
+      }
+
+      if (data.last_target_word_tr) {
+        lines.push(`Son hedef: ${esc(data.last_target_word_tr)}`);
+      }
+
+      if (data.last_interest_tr) {
+        lines.push(`Son ilgi: ${esc(data.last_interest_tr)}`);
+      }
+
+      if (data.last_reason) {
+        lines.push(`Sebep: ${esc(data.last_reason)}`);
+      }
+
+      if (Array.isArray(data.recent_targets) && data.recent_targets.length) {
+        lines.push(`Yakın hedefler: ${esc(data.recent_targets.join(", "))}`);
+      }
+
+      if (!lines.length) {
+        lines.push("Aktif seans bilgisi yok.");
+      }
+
+      return `
+        ${chips}
+        <div class="autonomy-line">${lines.join("<br>")}</div>
+      `;
+    }
+
+    async function api(url, options = {}){
+      const headers = {};
+      if (!(options.body instanceof FormData)) {
+        headers["Content-Type"] = "application/json";
+      }
+      const res = await fetch(url, { headers, ...options });
+      return res.json();
+    }
+
+    function findAssetById(assetId){
+      return allAssetsCache.find(x => x.asset_id === assetId) || null;
+    }
+
+    function getAssetImage(assetId){
+      const asset = findAssetById(assetId);
+      if (!asset) return "";
+      return normalizeAssetPath(asset.image_path || asset.thumb_path || "");
+    }
+
+    function nextLayerZ(){
+      if (!sceneLayers.length) return 0;
+      return Math.max(...sceneLayers.map(x => Number(x.z || 0))) + 10;
+    }
+
+    function sortSceneLayers(){
+      sceneLayers.sort((a,b) => Number(a.z || 0) - Number(b.z || 0));
+    }
+
+    function getSelectedLayer(){
+      return sceneLayers.find(x => x.layer_id === selectedLayerId) || null;
+    }
+
+    function canvasSize(){
+      return {
+        width: Number(el("sceneCanvasW").value || 1280),
+        height: Number(el("sceneCanvasH").value || 720)
+      };
+    }
+
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(x => x.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(x => x.classList.remove("active"));
+        btn.classList.add("active");
+        el(btn.dataset.tab).classList.add("active");
+      });
+    });
+
+    el("assetImageInput").addEventListener("change", ev => {
+      const file = ev.target.files?.[0];
+      if (!file){
+        selectedImageBase64 = "";
+        el("thumbPreview").style.display = "none";
+        el("thumbPreview").src = "";
+        el("thumbPlaceholder").style.display = "block";
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        selectedImageBase64 = String(e.target?.result || "");
+        el("thumbPreview").src = selectedImageBase64;
+        el("thumbPreview").style.display = "block";
+        el("thumbPlaceholder").style.display = "none";
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function resetAssetForm(){
+      el("assetImageInput").value = "";
+      el("assetLabelTr").value = "";
+      el("assetTagsTr").value = "";
+      el("assetInterestsTr").value = "";
+      el("assetNotes").value = "";
+      el("assetPreferred").checked = false;
+      selectedImageBase64 = "";
+      el("thumbPreview").style.display = "none";
+      el("thumbPreview").src = "";
+      el("thumbPlaceholder").style.display = "block";
+      editingAssetId = "";
+      setMsg("assetCreateMessage", "");
+    }
+
+    async function createManualAsset(){
+      const labelTr = el("assetLabelTr").value.trim();
+      const tagsTr = csvToList(el("assetTagsTr").value);
+      const interestsTr = csvToList(el("assetInterestsTr").value);
+      const notes = el("assetNotes").value.trim();
+      const preferred = el("assetPreferred").checked;
+
+      if (!labelTr){
+        setMsg("assetCreateMessage", "Türkçe label gerekli", false);
+        return;
+      }
+
+      if (!selectedImageBase64){
+        setMsg("assetCreateMessage", "Bir görsel seçmelisin", false);
+        return;
+      }
+
+      const payload = {
+        label_tr: labelTr,
+        tags_tr: tagsTr,
+        interests_tr: interestsTr,
+        preferred,
+        notes,
+        source: "manual",
+        image_base64: selectedImageBase64
+      };
+
+      const data = await api("/assets/create", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+
+      if (!data.ok){
+        setMsg("assetCreateMessage", data.error || "Asset kaydedilemedi", false);
+        return;
+      }
+
+      setMsg("assetCreateMessage", "Asset kaydedildi", true);
+      resetAssetForm();
+      await refreshAssetArea();
+    }
+
+    async function loadAssets(){
+      const q = encodeURIComponent(el("filterQ").value.trim());
+      const label = encodeURIComponent(el("filterLabel").value.trim());
+      const tag = encodeURIComponent(el("filterTag").value.trim());
+      const interest = encodeURIComponent(el("filterInterest").value.trim());
+
+      const data = await api(`/assets/list?q=${q}&label=${label}&tag=${tag}&interest=${interest}&status=active`);
+      const items = data.assets || [];
+      allAssetsCache = items;
+      populateAssetSelect(items);
+
+      const root = el("assetsGrid");
+      if (!items.length){
+        root.innerHTML = `<div class="small">Henüz asset yok</div>`;
+        return;
+      }
+
+      root.innerHTML = items.map(item => {
+        const tags = (item.tags_tr || []).map(x => `<span class="chip">${esc(x)}</span>`).join("");
+        const interests = (item.interests_tr || []).map(x => `<span class="chip">${esc(x)}</span>`).join("");
+        const pref = item.preferred ? `<span class="chip">preferred</span>` : "";
+        const image = esc(normalizeAssetPath(item.image_path || item.thumb_path || ""));
+        const labelTr = esc(item.label_tr || item.label || "");
+        const notes = esc(item.notes || "");
+        const id = esc(item.asset_id || "");
+
+        return `
+          <div class="asset-card">
+            <img src="${image}" alt="${labelTr}">
+            <div class="asset-body">
+              <div class="asset-title">${labelTr}</div>
+              <div class="asset-id mono">${id}</div>
+              <div class="chips">${pref}${tags}</div>
+              <div class="chips">${interests}</div>
+              <div class="notes">${notes || "Not yok"}</div>
+              <div class="small">Kullanım: ${item.used_count || 0}</div>
+              <div class="asset-actions">
+                <button class="alt" onclick="fillAssetEdit('${id}')">Düzenle</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function populateAssetSelect(items){
+      const sel = el("layerAssetSelect");
+      const current = sel.value;
+      sel.innerHTML = `<option value="">Asset seç</option>` + items.map(item => {
+        const label = esc(item.label_tr || item.label || item.asset_id || "");
+        const id = esc(item.asset_id || "");
+        return `<option value="${id}">${label}</option>`;
+      }).join("");
+      if ([...sel.options].some(o => o.value === current)) {
+        sel.value = current;
+      }
+    }
+
+    async function loadAssetStats(){
+      const data = await api("/assets/stats");
+      el("assetStatsBox").textContent = pretty(data);
+      el("statTotalAssets").textContent = data.total_assets ?? 0;
+      el("statPreferred").textContent = data.preferred_assets ?? 0;
+      el("statUsed").textContent = data.total_used_count ?? 0;
+      el("statActive").textContent = data.active_assets ?? 0;
+    }
+
+    async function loadAssetHistory(){
+      const data = await api("/assets/history?limit=20");
+      const items = data.items || [];
+      const root = el("assetHistoryBox");
+
+      if (!items.length){
+        root.innerHTML = `<div class="small">Henüz geçmiş kaydı yok</div>`;
+        return;
+      }
+
+      root.innerHTML = items.map(item => {
+        const date = formatHistoryDate(item.updated_at || item.created_at || "");
+        const label = item.label_tr || item.label || "-";
+        const notes = item.notes || "";
+        const preferred = item.preferred ? " ★" : "";
+
+        return `
+          <div class="list-item">
+            ${esc(date)} &nbsp; <strong>${esc(label)}</strong>${preferred}
+            ${notes ? ` — ${esc(notes)}` : ""}
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function fillAssetEdit(assetId){
+      const item = await api(`/assets/get?asset_id=${encodeURIComponent(assetId)}`);
+      if (item.error){
+        alert(item.error);
+        return;
+      }
+
+      document.querySelector('[data-tab="assetTab"]').click();
+      el("assetLabelTr").value = item.label_tr || "";
+      el("assetTagsTr").value = (item.tags_tr || []).join(", ");
+      el("assetInterestsTr").value = (item.interests_tr || []).join(", ");
+      el("assetNotes").value = item.notes || "";
+      el("assetPreferred").checked = !!item.preferred;
+      if (item.image_path){
+        el("thumbPreview").src = normalizeAssetPath(item.image_path);
+        el("thumbPreview").style.display = "block";
+        el("thumbPlaceholder").style.display = "none";
+      }
+      editingAssetId = assetId;
+      setMsg("assetCreateMessage", `Düzenlemek için asset seçildi: ${assetId}`, true);
+    }
+
+    async function saveEditedAsset(){
+      if (!editingAssetId){
+        setMsg("assetCreateMessage", "Önce düzenlenecek asset seç", false);
+        return;
+      }
+
+      const payload = {
+        label_tr: el("assetLabelTr").value.trim(),
+        tags_tr: csvToList(el("assetTagsTr").value),
+        interests_tr: csvToList(el("assetInterestsTr").value),
+        notes: el("assetNotes").value.trim(),
+        preferred: el("assetPreferred").checked
+      };
+
+      const data = await api(`/assets/update?asset_id=${encodeURIComponent(editingAssetId)}`, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+
+      if (!data.ok){
+        setMsg("assetCreateMessage", data.error || "Asset güncellenemedi", false);
+        return;
+      }
+
+      editingAssetId = "";
+      setMsg("assetCreateMessage", "Asset güncellendi", true);
+      await refreshAssetArea();
+    }
+
+    function buildScenePayloadFromEditor(){
+      sortSceneLayers();
+      return {
+        scene_id: editingSceneId || undefined,
+        name: el("sceneName").value.trim(),
+        target_word: el("sceneTargetWord").value.trim(),
+        pronunciation: el("scenePronunciation").value.trim(),
+        notes: el("sceneNotes").value.trim(),
+        canvas: {
+          width: Number(el("sceneCanvasW").value || 1280),
+          height: Number(el("sceneCanvasH").value || 720),
+          background: el("sceneCanvasBg").value.trim() || "#ffffff",
+        },
+        layers: sceneLayers.slice()
+      };
+    }
+
+    function resetSceneEditor(){
+      editingSceneId = "";
+      selectedLayerId = "";
+      sceneLayers = [];
+      el("sceneName").value = "";
+      el("sceneTargetWord").value = "";
+      el("scenePronunciation").value = "";
+      el("sceneNotes").value = "";
+      el("sceneCanvasW").value = "1280";
+      el("sceneCanvasH").value = "720";
+      el("sceneCanvasBg").value = "#ffffff";
+      resetLayerForm();
+      renderSceneCanvas();
+      renderLayerList();
+      setMsg("sceneMessage", "");
+    }
+
+    function resetLayerForm(){
+      selectedLayerId = "";
+      el("layerType").value = "background";
+      el("layerName").value = "";
+      el("layerAssetSelect").value = "";
+      el("layerText").value = "";
+      el("layerX").value = "0";
+      el("layerY").value = "0";
+      el("layerW").value = "200";
+      el("layerH").value = "200";
+      el("layerZ").value = String(nextLayerZ());
+      el("layerOpacity").value = "1";
+      el("layerFontSize").value = "42";
+      el("layerColor").value = "#111111";
+      el("layerVisible").checked = true;
+      renderLayerList();
+      renderSceneCanvas();
+    }
+
+    function fillLayerForm(layer){
+      if (!layer) return;
+      el("layerType").value = layer.type || "image";
+      el("layerName").value = layer.name || "";
+      el("layerAssetSelect").value = layer.asset_id || "";
+      el("layerText").value = layer.text || "";
+      el("layerX").value = String(layer.x ?? 0);
+      el("layerY").value = String(layer.y ?? 0);
+      el("layerW").value = String(layer.w ?? 200);
+      el("layerH").value = String(layer.h ?? 200);
+      el("layerZ").value = String(layer.z ?? 0);
+      el("layerOpacity").value = String(layer.opacity ?? 1);
+      el("layerFontSize").value = String(layer.font_size ?? 42);
+      el("layerColor").value = layer.color || "#111111";
+      el("layerVisible").checked = !!layer.visible;
+    }
+
+    function addLayerToScene(){
+      const type = el("layerType").value;
+      const assetId = el("layerAssetSelect").value;
+      const text = el("layerText").value.trim();
+      const name = el("layerName").value.trim() || `Katman ${sceneLayers.length + 1}`;
+
+      if (["background","image","avatar","decor"].includes(type) && !assetId){
+        setMsg("sceneMessage", "Bu katman türü için asset seçmelisin", false);
+        return;
+      }
+
+      if (["text","guide"].includes(type) && !text){
+        setMsg("sceneMessage", "Metin katmanı için yazı gerekli", false);
+        return;
+      }
+
+      const layer = {
+        layer_id: `layer_${Math.random().toString(36).slice(2, 10)}`,
+        name,
+        type,
+        x: Number(el("layerX").value || 0),
+        y: Number(el("layerY").value || 0),
+        w: Number(el("layerW").value || 200),
+        h: Number(el("layerH").value || 200),
+        z: Number(el("layerZ").value || nextLayerZ()),
+        opacity: Number(el("layerOpacity").value || 1),
+        visible: !!el("layerVisible").checked
+      };
+
+      if (["background","image","avatar","decor"].includes(type)){
+        layer.asset_id = assetId;
+        layer.src = getAssetImage(assetId);
+        layer.fit = type === "background" ? "cover" : "contain";
+      }
+
+      if (type === "text" || type === "guide"){
+        layer.text = text;
+        layer.font_size = Number(el("layerFontSize").value || 42);
+        layer.color = el("layerColor").value.trim() || "#111111";
+        layer.font_weight = type === "guide" ? "600" : "700";
+        layer.align = "left";
+      }
+
+      sceneLayers.push(layer);
+      sortSceneLayers();
+      selectedLayerId = layer.layer_id;
+      fillLayerForm(layer);
+      renderSceneCanvas();
+      renderLayerList();
+      setMsg("sceneMessage", "Katman eklendi", true);
+    }
+
+    function selectLayer(layerId){
+      selectedLayerId = layerId;
+      const layer = getSelectedLayer();
+      fillLayerForm(layer);
+      renderSceneCanvas();
+      renderLayerList();
+    }
+
+    function updateSelectedLayer(){
+      const layer = getSelectedLayer();
+      if (!layer){
+        setMsg("sceneMessage", "Önce katman seç", false);
+        return;
+      }
+
+      const type = el("layerType").value;
+      const assetId = el("layerAssetSelect").value;
+      const text = el("layerText").value.trim();
+
+      if (["background","image","avatar","decor"].includes(type) && !assetId){
+        setMsg("sceneMessage", "Bu katman türü için asset seçmelisin", false);
+        return;
+      }
+
+      if (["text","guide"].includes(type) && !text){
+        setMsg("sceneMessage", "Metin katmanı için yazı gerekli", false);
+        return;
+      }
+
+      layer.name = el("layerName").value.trim() || layer.name;
+      layer.type = type;
+      layer.x = Number(el("layerX").value || 0);
+      layer.y = Number(el("layerY").value || 0);
+      layer.w = Number(el("layerW").value || 200);
+      layer.h = Number(el("layerH").value || 200);
+      layer.z = Number(el("layerZ").value || 0);
+      layer.opacity = Number(el("layerOpacity").value || 1);
+      layer.visible = !!el("layerVisible").checked;
+
+      if (["background","image","avatar","decor"].includes(type)){
+        layer.asset_id = assetId;
+        layer.src = getAssetImage(assetId);
+        layer.fit = type === "background" ? "cover" : "contain";
+        delete layer.text;
+      } else {
+        delete layer.asset_id;
+        delete layer.src;
+        layer.text = text;
+        layer.font_size = Number(el("layerFontSize").value || 42);
+        layer.color = el("layerColor").value.trim() || "#111111";
+        layer.font_weight = type === "guide" ? "600" : "700";
+      }
+
+      sortSceneLayers();
+      fillLayerForm(layer);
+      renderSceneCanvas();
+      renderLayerList();
+      setMsg("sceneMessage", "Katman güncellendi", true);
+    }
+
+    function removeSelectedLayer(){
+      if (!selectedLayerId){
+        setMsg("sceneMessage", "Önce katman seç", false);
+        return;
+      }
+
+      sceneLayers = sceneLayers.filter(x => x.layer_id !== selectedLayerId);
+      selectedLayerId = "";
+      resetLayerForm();
+      renderSceneCanvas();
+      renderLayerList();
+      setMsg("sceneMessage", "Katman silindi", true);
+    }
+
+    function bringSelectedToFront(){
+      const layer = getSelectedLayer();
+      if (!layer) return;
+      const maxZ = sceneLayers.length ? Math.max(...sceneLayers.map(x => Number(x.z || 0))) : 0;
+      layer.z = maxZ + 10;
+      el("layerZ").value = String(layer.z);
+      sortSceneLayers();
+      renderSceneCanvas();
+      renderLayerList();
+    }
+
+    function sendSelectedToBack(){
+      const layer = getSelectedLayer();
+      if (!layer) return;
+      const minZ = sceneLayers.length ? Math.min(...sceneLayers.map(x => Number(x.z || 0))) : 0;
+      layer.z = minZ - 10;
+      el("layerZ").value = String(layer.z);
+      sortSceneLayers();
+      renderSceneCanvas();
+      renderLayerList();
+    }
+
+    function moveSelectedToMiddle(){
+      const layer = getSelectedLayer();
+      if (!layer) return;
+      const zs = sceneLayers.map(x => Number(x.z || 0)).sort((a,b) => a - b);
+      if (!zs.length) return;
+      layer.z = Math.round((zs[0] + zs[zs.length - 1]) / 2);
+      el("layerZ").value = String(layer.z);
+      sortSceneLayers();
+      renderSceneCanvas();
+      renderLayerList();
+    }
+
+    function centerSelectedOnCanvas(){
+      const layer = getSelectedLayer();
+      if (!layer) return;
+      const size = canvasSize();
+      layer.x = Math.round((size.width - Number(layer.w || 0)) / 2);
+      layer.y = Math.round((size.height - Number(layer.h || 0)) / 2);
+      el("layerX").value = String(layer.x);
+      el("layerY").value = String(layer.y);
+      renderSceneCanvas();
+      renderLayerList();
+    }
+
+    function startLayerDrag(event, layerId){
+      event.preventDefault();
+      event.stopPropagation();
+
+      selectLayer(layerId);
+
+      const layer = getSelectedLayer();
+      if (!layer) return;
+
+      dragState.active = true;
+      dragState.layerId = layerId;
+      dragState.startMouseX = event.clientX;
+      dragState.startMouseY = event.clientY;
+      dragState.startX = Number(layer.x || 0);
+      dragState.startY = Number(layer.y || 0);
+    }
+
+    function onGlobalMouseMove(event){
+      if (!dragState.active) return;
+
+      const layer = sceneLayers.find(x => x.layer_id === dragState.layerId);
+      if (!layer) return;
+
+      const canvas = el("sceneCanvas");
+      const rect = canvas.getBoundingClientRect();
+      const size = canvasSize();
+
+      const dxPx = event.clientX - dragState.startMouseX;
+      const dyPx = event.clientY - dragState.startMouseY;
+
+      const dx = Math.round((dxPx / rect.width) * size.width);
+      const dy = Math.round((dyPx / rect.height) * size.height);
+
+      layer.x = dragState.startX + dx;
+      layer.y = dragState.startY + dy;
+
+      el("layerX").value = String(layer.x);
+      el("layerY").value = String(layer.y);
+
+      renderSceneCanvas();
+      renderLayerList();
+    }
+
+    function onGlobalMouseUp(){
+      if (!dragState.active) return;
+      dragState.active = false;
+      dragState.layerId = "";
+    }
+
+    document.addEventListener("mousemove", onGlobalMouseMove);
+    document.addEventListener("mouseup", onGlobalMouseUp);
+
+    function renderSceneCanvas(){
+      const root = el("sceneCanvas");
+      const w = Number(el("sceneCanvasW").value || 1280);
+      const h = Number(el("sceneCanvasH").value || 720);
+      const bg = el("sceneCanvasBg").value.trim() || "#ffffff";
+
+      root.style.background = bg;
+      root.innerHTML = "";
+
+      sortSceneLayers();
+
+      sceneLayers.forEach(layer => {
+        if (!layer.visible) return;
+
+        const node = document.createElement("div");
+        node.className = "scene-layer";
+        if (layer.layer_id === selectedLayerId) node.classList.add("selected");
+        if (layer.type === "text") node.classList.add("text-layer");
+        if (layer.type === "guide") node.classList.add("guide-layer");
+
+        node.style.left = ((Number(layer.x || 0) / w) * 100) + "%";
+        node.style.top = ((Number(layer.y || 0) / h) * 100) + "%";
+        node.style.width = ((Number(layer.w || 0) / w) * 100) + "%";
+        node.style.height = ((Number(layer.h || 0) / h) * 100) + "%";
+        node.style.zIndex = String(layer.z || 0);
+        node.style.opacity = String(layer.opacity ?? 1);
+
+        if (layer.type === "text" || layer.type === "guide"){
+          node.textContent = layer.text || "";
+          node.style.color = layer.color || "#111111";
+          node.style.fontSize = Math.max(12, Number(layer.font_size || 42) * 0.42) + "px";
+          node.style.fontWeight = layer.font_weight || "700";
+        } else {
+          const img = document.createElement("img");
+          img.src = normalizeAssetPath(layer.src || getAssetImage(layer.asset_id || ""));
+          img.alt = layer.name || layer.type || "";
+          img.style.objectFit = layer.type === "background" ? "cover" : "contain";
+          node.appendChild(img);
+        }
+
+        node.addEventListener("mousedown", (event) => startLayerDrag(event, layer.layer_id));
+        node.addEventListener("click", (event) => {
+          event.stopPropagation();
+          selectLayer(layer.layer_id);
+        });
+
+        root.appendChild(node);
+      });
+
+      root.onclick = () => {
+        selectedLayerId = "";
+        renderSceneCanvas();
+        renderLayerList();
+      };
+    }
+
+    function renderLayerList(){
+      const root = el("layerList");
+      if (!sceneLayers.length){
+        root.innerHTML = `<div class="small">Henüz katman yok</div>`;
+        return;
+      }
+
+      sortSceneLayers();
+      root.innerHTML = sceneLayers.map(layer => `
+        <div class="layer-item ${layer.layer_id === selectedLayerId ? "active" : ""}" onclick="selectLayer('${esc(layer.layer_id)}')">
+          <div class="top">
+            <strong>${esc(layer.name || "Katman")}</strong>
+            <span class="layer-type">${esc(layer.type || "")}</span>
+          </div>
+          <div class="small">z=${esc(layer.z)} • x=${esc(layer.x)} • y=${esc(layer.y)} • ${esc(layer.w)}x${esc(layer.h)}</div>
+          <div class="small">${layer.type === "text" || layer.type === "guide" ? esc(layer.text || "") : esc(layer.asset_id || "")}</div>
+        </div>
+      `).join("");
+    }
+
+    async function saveScene(){
+      const payload = buildScenePayloadFromEditor();
+
+      if (!payload.name){
+        setMsg("sceneMessage", "Sahne adı gerekli", false);
+        return;
+      }
+
+      if (!payload.layers.length){
+        setMsg("sceneMessage", "En az 1 katman olmalı", false);
+        return;
+      }
+
+      let data;
+      if (editingSceneId){
+        data = await api(`/scenes/update?scene_id=${encodeURIComponent(editingSceneId)}`, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+      } else {
+        data = await api("/scenes/create", {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+      }
+
+      if (!data.ok){
+        setMsg("sceneMessage", data.error || "Sahne kaydedilemedi", false);
+        return;
+      }
+
+      editingSceneId = data.scene?.scene_id || editingSceneId;
+      setMsg("sceneMessage", "Sahne kaydedildi", true);
+      await loadScenes();
+      await loadSceneStats();
+    }
+
+    async function sendSceneToPi(){
+      const payload = buildScenePayloadFromEditor();
+
+      if (!payload.layers.length){
+        setMsg("sceneMessage", "Gönderilecek katman yok", false);
+        return;
+      }
+
+      const data = await api("/screen/layered_scene", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+
+      setMsg("sceneMessage", data.ok === false ? (data.error || "Gönderilemedi") : "Sahne Pi'ye gönderildi", data.ok !== false);
+      await refreshQueue();
+    }
+
+    async function loadScenes(){
+      const data = await api("/scenes/list?status=active");
+      const items = data.items || [];
+      const root = el("sceneList");
+
+      if (!items.length){
+        root.innerHTML = `<div class="small">Henüz sahne yok</div>`;
+        return;
+      }
+
+      root.innerHTML = items.map(item => `
+        <div class="scene-card">
+          <h4>${esc(item.name || "")}</h4>
+          <div class="meta">${esc(item.scene_id || "")}</div>
+          <div class="small">Hedef: ${esc(item.target_word || "")} • Katman: ${(item.layers || []).length}</div>
+          <div class="small" style="margin-top:6px;">${esc(item.pronunciation || "")}</div>
+          <div class="inline-actions">
+            <button class="alt" onclick="openScene('${esc(item.scene_id || "")}')">Yükle</button>
+            <button class="alt" onclick="sendStoredSceneToPi('${esc(item.scene_id || "")}')">Gönder</button>
+            <button class="danger" onclick="deleteScene('${esc(item.scene_id || "")}')">Sil</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function openScene(sceneId){
+      const item = await api(`/scenes/get?scene_id=${encodeURIComponent(sceneId)}`);
+      if (item.error){
+        setMsg("sceneMessage", item.error, false);
+        return;
+      }
+
+      editingSceneId = item.scene_id || "";
+      el("sceneName").value = item.name || "";
+      el("sceneTargetWord").value = item.target_word || "";
+      el("scenePronunciation").value = item.pronunciation || "";
+      el("sceneNotes").value = item.notes || "";
+      el("sceneCanvasW").value = item.canvas?.width || 1280;
+      el("sceneCanvasH").value = item.canvas?.height || 720;
+      el("sceneCanvasBg").value = item.canvas?.background || "#ffffff";
+      sceneLayers = Array.isArray(item.layers) ? item.layers.slice() : [];
+      selectedLayerId = "";
+      resetLayerForm();
+      renderSceneCanvas();
+      renderLayerList();
+      document.querySelector('[data-tab="sceneTab"]').click();
+      setMsg("sceneMessage", "Sahne yüklendi", true);
+    }
+
+    async function deleteScene(sceneId){
+      const data = await api(`/scenes/delete?scene_id=${encodeURIComponent(sceneId)}`, {
+        method: "POST"
+      });
+
+      if (!data.ok){
+        setMsg("sceneMessage", data.error || "Sahne silinemedi", false);
+        return;
+      }
+
+      if (editingSceneId === sceneId){
+        resetSceneEditor();
+      }
+
+      setMsg("sceneMessage", "Sahne silindi", true);
+      await loadScenes();
+      await loadSceneStats();
+    }
+
+    async function sendStoredSceneToPi(sceneId){
+      const item = await api(`/scenes/get?scene_id=${encodeURIComponent(sceneId)}`);
+      if (item.error){
+        setMsg("sceneMessage", item.error, false);
+        return;
+      }
+
+      const data = await api("/screen/layered_scene", {
+        method: "POST",
+        body: JSON.stringify(item)
+      });
+
+      setMsg("sceneMessage", data.ok === false ? (data.error || "Gönderilemedi") : "Kayıtlı sahne Pi'ye gönderildi", data.ok !== false);
+      await refreshQueue();
+    }
+
+    async function loadSceneStats(){
+      const data = await api("/scenes/stats");
+      el("statSceneCount").textContent = data.total_scenes ?? 0;
+      el("statLayerCount").textContent = data.total_layers ?? 0;
+    }
+
+    async function sendSpeechCards(){
+      const words = csvToList(el("speechWordsInput").value);
+      const data = await api("/screen/speech_cards", {
+        method: "POST",
+        body: JSON.stringify(words)
+      });
+      setMsg("controlMessage", data.ok === false ? (data.error || "Gönderilemedi") : "Konuşma kartları gönderildi", data.ok !== false);
+      await refreshQueue();
+    }
+
+    async function sendGamePayload(){
+      const payload = {
+        game_type: el("gameTypeInput").value.trim(),
+        target: el("gameTargetInput").value.trim()
+      };
+      const data = await api("/screen/game", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      setMsg("controlMessage", data.ok === false ? (data.error || "Gönderilemedi") : "Oyun payload gönderildi", data.ok !== false);
+      await refreshQueue();
+    }
+
+    async function shutdownAfter(){
+      const minutes = Number(prompt("Kaç dakika sonra kapansın?", "10") || "0");
+      if (!minutes) return;
+      const data = await api(`/session/shutdown_after?minutes=${minutes}`, { method: "POST" });
+      setMsg("piMessage", data.ok === false ? (data.error || "İşlem başarısız") : "Süreli kapatma komutu gönderildi", data.ok !== false);
+      await refreshQueue();
+    }
+
+    async function shutdownNow(){
+      const data = await api("/session/shutdown_now", { method: "POST" });
+      setMsg("piMessage", data.ok === false ? (data.error || "İşlem başarısız") : "Hemen kapatma komutu gönderildi", data.ok !== false);
+      await refreshQueue();
+    }
+
+    async function refreshQueue(){
+      const data = await api("/queue");
+      el("queueBox").textContent = pretty(data.commands || []);
+    }
+
+    function buildPayloadPreview(){
+      const screen = el("contentScreenType").value;
+      const target = el("contentTargetWord").value.trim();
+      const interest = el("contentInterest").value.trim();
+      const gameType = el("contentGameType").value.trim();
+      const notes = el("contentNotes").value.trim();
+
+      const payload = screen === "speech_cards"
+        ? { screen, cards: target ? [target] : [] }
+        : { screen, game_type: gameType, target, interest, notes };
+
+      el("payloadPreview").textContent = pretty(payload);
+      return payload;
+    }
+
+    async function sendPreviewPayload(){
+      const payload = buildPayloadPreview();
+      let data;
+
+      if (payload.screen === "speech_cards"){
+        data = await api("/screen/speech_cards", {
+          method: "POST",
+          body: JSON.stringify(payload.cards)
+        });
+      } else {
+        data = await api("/screen/game", {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+      }
+
+      setMsg("contentMessage", data.ok === false ? (data.error || "Gönderilemedi") : "Payload Pi'ye gönderildi", data.ok !== false);
+      await refreshQueue();
+    }
+
+    async function saveDraft(){
+      const name = el("draftName").value.trim();
+      if (!name){
+        setMsg("contentMessage", "Taslak adı gerekli", false);
+        return;
+      }
+
+      const payload = buildPayloadPreview();
+      const data = await api("/draft/save", {
+        method: "POST",
+        body: JSON.stringify({ name, payload })
+      });
+
+      setMsg("contentMessage", data.error ? data.error : "Taslak kaydedildi", !data.error);
+      await loadDrafts();
+    }
+
+    async function loadDrafts(){
+      const data = await api("/drafts");
+      const items = data.drafts || [];
+      const root = el("draftList");
+
+      if (!items.length){
+        root.innerHTML = `<div class="small">Kayıtlı taslak yok</div>`;
+        return;
+      }
+
+      root.innerHTML = items.map(d => `
+        <div class="list-item">
+          <div><strong>${esc(d.name || "")}</strong></div>
+          <div class="small">${esc(d.updated_at || d.created_at || "")}</div>
+          <div class="actions" style="margin-top:8px;">
+            <button class="alt" onclick="openDraft('${esc(d.name || "")}')">Yükle</button>
+            <button class="danger" onclick="deleteDraft('${esc(d.name || "")}')">Sil</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function openDraft(name){
+      const data = await api(`/draft?name=${encodeURIComponent(name)}`);
+      if (data.error){
+        setMsg("contentMessage", data.error, false);
+        return;
+      }
+
+      const payload = data.payload || {};
+      el("draftName").value = data.name || name;
+      el("contentScreenType").value = payload.screen || "speech_cards";
+      el("contentTargetWord").value = payload.target || (payload.cards?.[0] || "");
+      el("contentInterest").value = payload.interest || "";
+      el("contentGameType").value = payload.game_type || "";
+      el("contentNotes").value = payload.notes || "";
+      el("payloadPreview").textContent = pretty(payload);
+      setMsg("contentMessage", "Taslak yüklendi", true);
+    }
+
+    async function deleteDraft(name){
+      const data = await api(`/draft/delete?name=${encodeURIComponent(name)}`, { method: "POST" });
+      setMsg("contentMessage", data.error ? data.error : "Taslak silindi", !data.error);
+      await loadDrafts();
+    }
+
+    async function loadServerStatus(){
+      const data = await api("/server/status");
+      el("serverStatusText").textContent = data.error ? "Sunucu hatası" : "Sunucu aktif";
+      el("serverStatusBox").innerHTML = data.error
+        ? `<div class="small">Sunucu durumu alınamadı</div>`
+        : formatServerStatus(data);
+
+      if (data.mode){
+        el("modeSelect").value = data.mode;
+      }
+    }
+
+    async function applyMode(){
+      const mode = el("modeSelect").value;
+      const data = await api(`/mode/set?mode=${encodeURIComponent(mode)}`, { method: "POST" });
+      setMsg("piMessage", data.error ? data.error : "Mod güncellendi", !data.error);
+      await loadServerStatus();
+    }
+
+    async function startAllServers(){
+      const data = await api("/server/start_all", { method: "POST" });
+      setMsg("piMessage", data.error ? data.error : "Sunucular başlatıldı", !data.error);
+      await loadServerStatus();
+    }
+
+    async function stopAllServers(){
+      const data = await api("/server/stop_all", { method: "POST" });
+      setMsg("piMessage", data.error ? data.error : "Sunucular durduruldu", !data.error);
+      await loadServerStatus();
+    }
+
+    async function stopAllServersSafe(){
+      const data = await api("/server/stop_all_safe", { method: "POST" });
+      setMsg("piMessage", data.error ? data.error : "Sunucular güvenli durduruldu", !data.error);
+      await loadServerStatus();
+    }
+
+    async function fakeSpeech(){
+      const data = await api("/dev/fake_speech", { method: "POST" });
+      setMsg("piMessage", data.error ? data.error : "Test verisi gönderildi", !data.error);
+      await loadAutonomyState();
+    }
+
+    async function startAutonomy(){
+      const data = await api("/autonomy/session/start", { method: "POST", body: JSON.stringify({}) });
+      setMsg("piMessage", data.error ? data.error : "Otonom seans başlatıldı", !data.error);
+      await loadAutonomyState();
+    }
+
+    async function tickAutonomy(){
+      const data = await api("/autonomy/session/tick?force=true", { method: "POST" });
+      setMsg("piMessage", data.error ? data.error : "Tick tamamlandı", !data.error);
+      await loadAutonomyState();
+      await refreshQueue();
+    }
+
+    async function stopAutonomy(){
+      const data = await api("/autonomy/session/stop?reason=manual_stop", { method: "POST" });
+      setMsg("piMessage", data.error ? data.error : "Otonom seans durduruldu", !data.error);
+      await loadAutonomyState();
+    }
+
+    async function loadAutonomyState(){
+      const data = await api("/autonomy/session/state");
+      el("autonomyStateBox").innerHTML = data.error
+        ? `<div class="small">Otonom seans bilgisi alınamadı</div>`
+        : formatAutonomySession(data);
+    }
+
+    async function refreshAssetArea(){
+      await loadAssets();
+      await loadAssetStats();
+      await loadAssetHistory();
+      await loadSceneStats();
+      await loadServerStatus();
+    }
+
+    async function init(){
+      await loadServerStatus();
+      await refreshAssetArea();
+      await refreshQueue();
+      await loadDrafts();
+      await loadAutonomyState();
+      await loadScenes();
+      buildPayloadPreview();
+      resetLayerForm();
+      renderSceneCanvas();
+      renderLayerList();
+    }
+
+    init();
+  </script>
+</body>
+</html>
