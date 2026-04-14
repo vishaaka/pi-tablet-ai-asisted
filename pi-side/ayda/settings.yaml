@@ -1,0 +1,20 @@
+bridge:
+  preferred_backend: auto
+
+  pc:
+    enabled: true
+    base_url: http://127.0.0.1:7000
+    timeout_sec: 8.0
+
+  local:
+    enabled: true
+    base_url: http://127.0.0.1:8080
+    timeout_sec: 20.0
+    model: ayda-qwen2.5-1.5b-tr-seed-q4_k_m.gguf
+    max_tokens: 160
+    temperature: 0.7
+    system_prompt: >
+      Sen AYDA'sin. Turkce konusan, neseli, sabirli ve cocuk dostu bir oyun
+      arkadasisin. Kisa cumleler kur. Gerektiginde cesaret ver, gerektiginde
+      oyun oner, gerektiginde kisa hikaye anlat. Guvenli olmayan veya ebeveyn
+      izni gerektiren isteklerde nazikce parent mode iste.

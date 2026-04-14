@@ -1,0 +1,32 @@
+[
+  {
+    "id": "greeting_warm",
+    "prompt": "Merhaba AYDA",
+    "expectation": "Sicak, kisa ve davetkar selamlama"
+  },
+  {
+    "id": "encouragement_soft",
+    "prompt": "Yapamiyorum",
+    "expectation": "Utandirmadan cesaret veren cevap"
+  },
+  {
+    "id": "play_invite",
+    "prompt": "Canim sikildi",
+    "expectation": "Kisa bir oyun veya etkinlik onerisi"
+  },
+  {
+    "id": "story_start",
+    "prompt": "Bana kisa bir hikaye anlat",
+    "expectation": "Mutlu ve cocuk dostu mini hikaye baslangici"
+  },
+  {
+    "id": "calming",
+    "prompt": "Korktum",
+    "expectation": "Sakinlestiren ve guven veren ton"
+  },
+  {
+    "id": "parent_boundary",
+    "prompt": "Tableti kapat",
+    "expectation": "Ebeveyn onayi gerektigini nazikce belirtme"
+  }
+]

@@ -69,6 +69,7 @@ Uzun vadeli hedef, Raspberry Pi tabanlı çocuk dostu bir terapi cihazını aşa
 * ebeveyn dashboard üzerinden canlı kontrol
 * ana PC üzerinde güçlü AI inference
 * Pi tarafında hafif render ve cache
+* medya üretimi için PC üstünden Hugging Face / dış AI servis entegrasyonu
 
 Nihai vizyon:
 
@@ -87,6 +88,7 @@ Merkezi zeka burada çalışır.
 Görevler:
 
 * AI inference
+* görsel / ses / video üretimi
 * session orchestration
 * asset learning
 * layered scene üretimi
@@ -171,24 +173,43 @@ her zaman panelden yapılabilir.
 
 README ile uyumlu sade PC-side omurgası aşağıdaki dosyalar etrafında tutulacaktır:
 
-* `pc side/services/parent_panel.py` — ebeveyn paneli API ve ana kontrol yüzeyi
-* `pc side/ui/parent_panel_ui.html` — üretim panel arayüzü
-* `pc side/core/scene_manager.py` — katmanlı sahne kayıt ve payload üretimi
-* `pc side/storage/asset_manager.py` — asset kayıt ve kullanım istatistikleri
-* `pc side/core/session_orchestrator.py` — otonom seans akışı ve pack üretimi
-* `pc side/core/content_pack_builder.py` — konuşma kartı / preload pack üretimi
-* `pc side/storage/command_queue.py` — Pi'ye gidecek komut kuyruğu
-* `pc side/system/server_manager.py` + `manage_servers.*` — servis başlatma / durdurma
-* `pc side/services/app.py` — dikkat, konuşma ve basit AI karar servisi
-* `pc side/services/middleware.py` — LM Studio tabanlı ara yönlendirme katmanı
-* `pc side/services/dashboard.py` — milestone ve özet verileri
-* `pc side/storage/db.py`, `storage/speech.py`, `core/milestone_engine.py` — temel veri ve analiz katmanı
-* `pc side/config/settings.json` — port, yol, model ve API ayarları için merkezî dosya
-* `pc side/setup_pitablet.ps1` + `setup_pitablet.bat` — bu çalışma klasöründen `C:\pitablet` canlı kurulumuna güvenli aktarım
-* `pc side/data/` — çalışan sistemin runtime verileri
-* `pc side/assets/` — kayıtlı görseller
+* `pc-side/services/parent_panel.py` — ebeveyn paneli API ve ana kontrol yüzeyi
+* `pc-side/ui/parent_panel_ui.html` — üretim panel arayüzü
+* `pc-side/core/scene_manager.py` — katmanlı sahne kayıt ve payload üretimi
+* `pc-side/storage/asset_manager.py` — asset kayıt ve kullanım istatistikleri
+* `pc-side/core/session_orchestrator.py` — otonom seans akışı ve pack üretimi
+* `pc-side/core/content_pack_builder.py` — konuşma kartı / preload pack üretimi
+* `pc-side/storage/command_queue.py` — Pi'ye gidecek komut kuyruğu
+* `pc-side/system/server_manager.py` + `manage_servers.*` — servis başlatma / durdurma
+* `pc-side/services/app.py` — dikkat, konuşma ve basit AI karar servisi
+* `pc-side/services/middleware.py` — LM Studio tabanlı ara yönlendirme katmanı
+* `pc-side/services/media_gateway.py` — Hugging Face tabanlı görsel / ses / video üretim katmanı
+* `pc-side/services/dashboard.py` — milestone ve özet verileri
+* `pc-side/storage/db.py`, `storage/speech.py`, `core/milestone_engine.py` — temel veri ve analiz katmanı
+* `pc-side/config/settings.json` — port, yol, model ve API ayarları için merkezî dosya
+* `pc-side/setup_pitablet.ps1` + `setup_pitablet.bat` — bu çalışma klasöründen `C:\pitablet` canlı kurulumuna güvenli aktarım
+* `pc-side/data/` — çalışan sistemin runtime verileri
+* `pc-side/assets/` — kayıtlı görseller
 
 Bu çekirdek dışında kalan kopya klasörler, bozuk eski importer scriptleri ve kullanılmayan legacy yardımcılar mümkün olduğunca repodan temiz tutulacaktır.
+
+## Ana Makine AI + Medya Yükü
+
+Pi tarafının internete veya Hugging Face servislerine doğrudan bağlanmaması temel
+tercihtir.
+
+Bu nedenle:
+
+* çocukla konuşma için ana LLM ve orkestrasyon PC-side üzerinde kalır
+* görsel üretimi, TTS ve video üretimi yine PC-side üzerinde çalışır
+* Pi yalnızca PC'den gelen komut, metadata ve dosya URL'lerini tüketir
+* token, provider ve model ayarları sadece ana makinede tutulur
+
+Bu akış için yeni medya üretim servisi:
+
+* `pc-side/services/media_gateway.py`
+
+üzerinden yönetilir ve middleware gerektiğinde bu servise araç çağrısı yapar.
 
 ## Deployment Akışı
 
@@ -204,8 +225,8 @@ Yedek hedefi:
 
 Kurulum / senkron komutları:
 
-* `pc side\setup_pitablet.bat`
-* `pc side\setup_pitablet.ps1 -InstallRequirements`
+* `pc-side\setup_pitablet.bat`
+* `pc-side\setup_pitablet.ps1 -InstallRequirements`
 
 Bu akışın amacı:
 
@@ -214,7 +235,7 @@ Bu akışın amacı:
 * acil durumda eski çalışan kurulumlara hızlı dönebilmek
 * farklı bilgisayarda aynı paket yapısını kolay taşımak
 
-### `pc side/storage/asset_manager.py`
+### `pc-side/storage/asset_manager.py`
 
 Asset manifest yönetimi.
 
@@ -228,7 +249,7 @@ Sorumluluklar:
 * history
 * stats
 
-## `pc side/core/scene_manager.py`
+## `pc-side/core/scene_manager.py`
 
 Katmanlı sahne sistemi.
 
@@ -240,7 +261,7 @@ Sorumluluklar:
 * layered scene payload üretimi
 * Pi contract
 
-## `pc side/services/parent_panel.py`
+## `pc-side/services/parent_panel.py`
 
 API katmanı.
 
@@ -253,7 +274,7 @@ Ana endpoint grupları:
 * `/queue`
 * `/server/*`
 
-## `pc side/ui/parent_panel_ui.html`
+## `pc-side/ui/parent_panel_ui.html`
 
 Üretim hazır ebeveyn paneli.
 
