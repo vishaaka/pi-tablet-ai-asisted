@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AYDA Pi Kiosk</title>
+  <style>
+    :root {
+      --bg-a: #fff7e8;
+      --bg-b: #dff4ff;
+      --ink: #203247;
+      --soft: #5d7086;
+      --accent: #ff7a59;
+      --accent-2: #0f9d8a;
+      --card: rgba(255,255,255,0.84);
+      --line: rgba(32,50,71,0.12);
+      --shadow: 0 20px 50px rgba(32,50,71,0.12);
+      --radius: 28px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.9), transparent 38%),
+        radial-gradient(circle at bottom right, rgba(255,255,255,0.65), transparent 30%),
+        linear-gradient(135deg, var(--bg-a), var(--bg-b));
+      min-height: 100vh;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      min-height: 100vh;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .panel,
+    .chat,
+    .composer {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .panel {
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1;
+    }
+
+    .brand p {
+      margin: 8px 0 0;
+      color: var(--soft);
+      font-size: 15px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(15,157,138,0.12);
+      color: var(--accent-2);
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .status-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .status-card {
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--line);
+    }
+
+    .status-card label {
+      display: block;
+      color: var(--soft);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+
+    .status-card strong {
+      font-size: 18px;
+    }
+
+    .quick-actions {
+      display: grid;
+      gap: 10px;
+    }
+
+    .quick-actions button,
+    .mode-toggle button,
+    .send-button {
+      appearance: none;
+      border: 0;
+      border-radius: 18px;
+      padding: 14px 16px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 120ms ease, opacity 120ms ease;
+    }
+
+    button:active { transform: scale(0.98); }
+
+    .quick-actions button {
+      background: #fff;
+      color: var(--ink);
+      border: 1px solid var(--line);
+      text-align: left;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-rows: 1fr auto;
+      gap: 18px;
+      min-height: 0;
+    }
+
+    .chat {
+      padding: 22px;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .message {
+      max-width: 78%;
+      padding: 16px 18px;
+      border-radius: 22px;
+      line-height: 1.45;
+      font-size: 20px;
+      white-space: pre-wrap;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, #ffd19d, #ffb38b);
+    }
+
+    .message.ayda {
+      align-self: flex-start;
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .composer {
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .mode-toggle {
+      display: inline-grid;
+      grid-auto-flow: column;
+      gap: 10px;
+    }
+
+    .mode-toggle button {
+      background: #fff;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .mode-toggle button.active {
+      background: var(--accent-2);
+      color: #fff;
+    }
+
+    .composer-row {
+      display: grid;
+      grid-template-columns: 1fr 180px;
+      gap: 14px;
+    }
+
+    textarea {
+      width: 100%;
+      resize: none;
+      min-height: 96px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      padding: 16px 18px;
+      font: inherit;
+      font-size: 20px;
+      color: var(--ink);
+      background: rgba(255,255,255,0.92);
+    }
+
+    .send-button {
+      background: linear-gradient(135deg, var(--accent), #ff9566);
+      color: #fff;
+      min-height: 96px;
+    }
+
+    .hint {
+      color: var(--soft);
+      font-size: 14px;
+    }
+
+    @media (max-width: 1100px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="panel">
+      <div class="brand">
+        <div class="pill">AYDA tablet kiosk</div>
+        <h1>Merhaba</h1>
+        <p>Pi ustunde hafif arayuz, ana zekada guclu cevaplar.</p>
+      </div>
+
+      <div class="status-grid">
+        <div class="status-card">
+          <label>Baglanti</label>
+          <strong id="healthText">Kontrol ediliyor</strong>
+        </div>
+        <div class="status-card">
+          <label>Backend</label>
+          <strong id="backendText">-</strong>
+        </div>
+        <div class="status-card">
+          <label>Mod</label>
+          <strong id="modeText">child</strong>
+        </div>
+      </div>
+
+      <div class="quick-actions">
+        <button type="button" data-prompt="Canim sikildi">Canim sikildi</button>
+        <button type="button" data-prompt="Bana kisa bir hikaye anlat">Kisa hikaye</button>
+        <button type="button" data-prompt="Bir oyun oynayalim">Oyun oynayalim</button>
+        <button type="button" data-prompt="Bugun ne ogrenebiliriz">Bir sey ogrenelim</button>
+        <button type="button" data-prompt="Bir bilmece sor">Bilmece sor</button>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <section class="chat" id="chatLog"></section>
+
+      <section class="composer">
+        <div class="mode-toggle">
+          <button type="button" class="active" data-mode="child">Cocuk modu</button>
+          <button type="button" data-mode="parent">Ebeveyn modu</button>
+        </div>
+
+        <div class="composer-row">
+          <textarea id="messageInput" placeholder="AYDA ile konusmak icin bir sey yaz..."></textarea>
+          <button class="send-button" id="sendButton" type="button">Gonder</button>
+        </div>
+
+        <div class="hint">Pi yerel arayuzu acik. PC baglantisi varsa daha guclu cevap verir.</div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const chatLog = document.getElementById("chatLog");
+    const input = document.getElementById("messageInput");
+    const sendButton = document.getElementById("sendButton");
+    const modeButtons = Array.from(document.querySelectorAll("[data-mode]"));
+    const promptButtons = Array.from(document.querySelectorAll("[data-prompt]"));
+    const healthText = document.getElementById("healthText");
+    const backendText = document.getElementById("backendText");
+    const modeText = document.getElementById("modeText");
+
+    let currentMode = "child";
+
+    function appendMessage(kind, text) {
+      const node = document.createElement("div");
+      node.className = `message ${kind}`;
+      node.textContent = text;
+      chatLog.appendChild(node);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function updateStatus(status) {
+      if (!status) return;
+      healthText.textContent = status.health ? "Hazir" : "Beklemede";
+      backendText.textContent = status.backend_status || "-";
+      modeText.textContent = status.session?.mode || currentMode;
+    }
+
+    async function refreshStatus() {
+      try {
+        const response = await fetch("/api/status");
+        const payload = await response.json();
+        updateStatus(payload);
+      } catch {
+        healthText.textContent = "Ulasilamiyor";
+      }
+    }
+
+    async function setMode(mode) {
+      currentMode = mode;
+      modeButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.mode === mode);
+      });
+
+      try {
+        const response = await fetch("/api/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ role: mode, mode }),
+        });
+        const payload = await response.json();
+        updateStatus(payload);
+      } catch {
+        // status will refresh later
+      }
+    }
+
+    async function sendMessage(text) {
+      const message = text.trim();
+      if (!message) return;
+
+      appendMessage("user", message);
+      input.value = "";
+      sendButton.disabled = true;
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: message, role: currentMode, mode: currentMode }),
+        });
+        const payload = await response.json();
+        appendMessage("ayda", payload.answer || "AYDA su an cevap veremedi.");
+        updateStatus(payload.status);
+      } catch {
+        appendMessage("ayda", "Baglanti kurulurken bir sorun oldu.");
+      } finally {
+        sendButton.disabled = false;
+        input.focus();
+      }
+    }
+
+    sendButton.addEventListener("click", () => sendMessage(input.value));
+
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage(input.value);
+      }
+    });
+
+    modeButtons.forEach((button) => {
+      button.addEventListener("click", () => setMode(button.dataset.mode));
+    });
+
+    promptButtons.forEach((button) => {
+      button.addEventListener("click", () => sendMessage(button.dataset.prompt));
+    });
+
+    appendMessage("ayda", "Merhaba. Ben AYDA. Istersen oyun oynayabiliriz ya da bir sey ogrenebiliriz.");
+    refreshStatus();
+    setInterval(refreshStatus, 7000);
+  </script>
+</body>
+</html>

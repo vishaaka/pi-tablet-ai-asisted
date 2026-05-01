@@ -1,0 +1,16 @@
+[Unit]
+Description=AYDA Pi-side web kiosk service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/pitablet/pi-side
+EnvironmentFile=-/etc/pitablet/ayda-web.env
+ExecStart=/usr/bin/python3 -m ayda.web.app
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

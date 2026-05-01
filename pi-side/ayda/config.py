@@ -116,6 +116,10 @@ def load_settings(path: str | Path | None = None) -> AydaSettings:
     if pc_base_url:
         settings.pc.base_url = pc_base_url
 
+    pc_enabled = os.getenv("AYDA_PC_ENABLED")
+    if pc_enabled is not None:
+        settings.pc.enabled = _as_bool(pc_enabled, settings.pc.enabled)
+
     pc_timeout = os.getenv("AYDA_PC_TIMEOUT") or os.getenv("AIDA_PC_TIMEOUT")
     if pc_timeout:
         settings.pc.timeout_sec = float(pc_timeout)
@@ -123,6 +127,10 @@ def load_settings(path: str | Path | None = None) -> AydaSettings:
     local_base_url = os.getenv("AYDA_LOCAL_BASE_URL")
     if local_base_url:
         settings.local.base_url = local_base_url
+
+    local_enabled = os.getenv("AYDA_LOCAL_ENABLED")
+    if local_enabled is not None:
+        settings.local.enabled = _as_bool(local_enabled, settings.local.enabled)
 
     local_timeout = os.getenv("AYDA_LOCAL_TIMEOUT")
     if local_timeout:

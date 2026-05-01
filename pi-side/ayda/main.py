@@ -38,8 +38,18 @@ def build_bridge_router(settings: AydaSettings) -> BridgeRouter:
     )
 
 
+def build_runtime(
+    settings: AydaSettings | None = None,
+) -> tuple[AydaSettings, AydaSession, BridgeRouter, DialogueManager]:
+    resolved_settings = settings or load_settings()
+    session = AydaSession()
+    bridge_router = build_bridge_router(resolved_settings)
+    manager = DialogueManager(pc_bridge=bridge_router)
+    return resolved_settings, session, bridge_router, manager
+
+
 def main() -> None:
-    settings = load_settings()
+    settings, session, bridge_router, manager = build_runtime()
 
     print("AYDA v1 metin omurgası başlatıldı.")
     print("Çıkmak için: çıkış")
@@ -48,10 +58,6 @@ def main() -> None:
     print("Köprü durumunu görmek için: /backend")
     print(f"Köprü tercihi: {settings.preferred_backend}")
     print()
-
-    session = AydaSession()
-    bridge_router = build_bridge_router(settings)
-    manager = DialogueManager(pc_bridge=bridge_router)
 
     while True:
         raw = input(f"[{session.active_user_role}/{session.current_mode}] Sen: ").strip()
